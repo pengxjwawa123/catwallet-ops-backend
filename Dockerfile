@@ -59,4 +59,4 @@ EXPOSE 3000
 # docker-entrypoint.sh runs `prisma migrate deploy` then starts the app.
 # To skip migrations (e.g. in CI smoke tests) set SKIP_MIGRATIONS=true.
 ENTRYPOINT ["./docker-entrypoint.sh"]
-CMD ["node", "dist/apps/api/src/main"]
+CMD ["node", "dist/main"]
