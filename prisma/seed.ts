@@ -3,31 +3,91 @@ import * as argon2 from 'argon2';
 
 const prisma = new PrismaClient();
 
+// All permissions to seed
+const PERMISSIONS: { resource: string; action: string; description: string }[] = [
+  { resource: 'ops_user', action: 'create', description: 'Create ops users' },
+  { resource: 'ops_user', action: 'read', description: 'Read ops users' },
+  { resource: 'ops_user', action: 'update', description: 'Update ops users' },
+  { resource: 'ops_user', action: 'delete', description: 'Delete ops users' },
+  { resource: 'rbac', action: 'manage', description: 'Manage roles and permissions' },
+  { resource: 'audit', action: 'read', description: 'Read audit logs' },
+  { resource: 'role', action: 'assign', description: 'Assign roles to users' },
+  { resource: 'feature_flag', action: 'read', description: 'Read feature flags' },
+  { resource: 'feature_flag', action: 'manage', description: 'Manage feature flags' },
+  { resource: 'remote_config', action: 'read', description: 'Read remote configs' },
+  { resource: 'remote_config', action: 'manage', description: 'Manage remote configs' },
+  { resource: 'announcement', action: 'read', description: 'Read announcements' },
+  { resource: 'announcement', action: 'manage', description: 'Manage announcements' },
+];
+
+// Permissions granted to operator role (read-only + audit read)
+const OPERATOR_PERMISSIONS = new Set([
+  'ops_user:read',
+  'audit:read',
+  'feature_flag:read',
+  'remote_config:read',
+  'announcement:read',
+]);
+
 async function main() {
-  // Create superadmin role
+  // ── Roles ──────────────────────────────────────────────────────────────────
   const superadminRole = await prisma.opsRole.upsert({
     where: { name: 'superadmin' },
     update: {},
-    create: {
-      name: 'superadmin',
-      description: 'Full system access',
-    },
+    create: { name: 'superadmin', description: 'Full system access' },
   });
 
-  // Create operator role
-  await prisma.opsRole.upsert({
+  const operatorRole = await prisma.opsRole.upsert({
     where: { name: 'operator' },
     update: {},
-    create: {
-      name: 'operator',
-      description: 'Standard operator access',
-    },
+    create: { name: 'operator', description: 'Standard operator access' },
   });
 
-  // Determine superadmin credentials from env or defaults
+  // ── Permissions ────────────────────────────────────────────────────────────
+  const upsertedPerms: { id: string; resource: string; action: string }[] = [];
+  for (const p of PERMISSIONS) {
+    const perm = await prisma.opsPermission.upsert({
+      where: { resource_action: { resource: p.resource, action: p.action } },
+      update: { description: p.description },
+      create: p,
+    });
+    upsertedPerms.push(perm);
+  }
+
+  // ── Assign all permissions to superadmin ───────────────────────────────────
+  for (const perm of upsertedPerms) {
+    await prisma.opsRolePermission.upsert({
+      where: {
+        opsRoleId_opsPermissionId: {
+          opsRoleId: superadminRole.id,
+          opsPermissionId: perm.id,
+        },
+      },
+      update: {},
+      create: { opsRoleId: superadminRole.id, opsPermissionId: perm.id },
+    });
+  }
+
+  // ── Assign read-only permissions to operator ───────────────────────────────
+  for (const perm of upsertedPerms) {
+    const key = `${perm.resource}:${perm.action}`;
+    if (OPERATOR_PERMISSIONS.has(key)) {
+      await prisma.opsRolePermission.upsert({
+        where: {
+          opsRoleId_opsPermissionId: {
+            opsRoleId: operatorRole.id,
+            opsPermissionId: perm.id,
+          },
+        },
+        update: {},
+        create: { opsRoleId: operatorRole.id, opsPermissionId: perm.id },
+      });
+    }
+  }
+
+  // ── Admin user ─────────────────────────────────────────────────────────────
   const adminUsername = process.env.SEED_ADMIN_USERNAME ?? 'admin';
 
-  // LOW#9: Reject hardcoded default password in production to prevent insecure deployments
   if (process.env.NODE_ENV === 'production' && !process.env.SEED_ADMIN_PASSWORD) {
     console.error(
       '[SEED] ERROR: SEED_ADMIN_PASSWORD must be set in production. ' +
@@ -50,31 +110,21 @@ async function main() {
   const adminUser = await prisma.opsUser.upsert({
     where: { username: adminUsername },
     update: { passwordHash, status: 'ACTIVE' },
-    create: {
-      username: adminUsername,
-      passwordHash,
-      status: 'ACTIVE',
-    },
+    create: { username: adminUsername, passwordHash, status: 'ACTIVE' },
   });
 
-  // Assign superadmin role to admin user
   await prisma.opsUserRole.upsert({
     where: {
-      opsUserId_opsRoleId: {
-        opsUserId: adminUser.id,
-        opsRoleId: superadminRole.id,
-      },
+      opsUserId_opsRoleId: { opsUserId: adminUser.id, opsRoleId: superadminRole.id },
     },
     update: {},
-    create: {
-      opsUserId: adminUser.id,
-      opsRoleId: superadminRole.id,
-    },
+    create: { opsUserId: adminUser.id, opsRoleId: superadminRole.id },
   });
 
   console.log(`[SEED] Superadmin user "${adminUsername}" ready.`);
   console.log('[SEED] Password source: SEED_ADMIN_PASSWORD env var (or default if not set).');
-  console.log('[SEED] Roles created: superadmin, operator');
+  console.log(`[SEED] Roles created: superadmin, operator`);
+  console.log(`[SEED] Permissions seeded: ${upsertedPerms.length}`);
 }
 
 main()

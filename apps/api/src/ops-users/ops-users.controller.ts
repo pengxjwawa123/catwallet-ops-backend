@@ -25,6 +25,7 @@ import {
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequestUser } from '../auth/strategies/jwt.strategy';
+import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 
 @ApiTags('Ops Users')
 @ApiBearerAuth()
@@ -33,18 +34,21 @@ export class OpsUsersController {
   constructor(private readonly opsUsersService: OpsUsersService) {}
 
   @Post()
-  @ApiOperation({ summary: 'Create ops user (superadmin only)' })
+  @RequirePermission('ops_user:create')
+  @ApiOperation({ summary: 'Create ops user' })
   create(@Body() dto: CreateOpsUserDto, @CurrentUser() caller: RequestUser) {
     return this.opsUsersService.create(dto, caller);
   }
 
   @Get()
+  @RequirePermission('ops_user:read')
   @ApiOperation({ summary: 'List ops users with pagination' })
   findAll(@Query() pagination: PaginationDto) {
     return this.opsUsersService.findAll(pagination);
   }
 
   @Get(':id')
+  @RequirePermission('ops_user:read')
   @ApiOperation({ summary: 'Get ops user by ID' })
   @ApiParam({ name: 'id', type: String })
   findOne(@Param('id') id: string) {
@@ -52,6 +56,7 @@ export class OpsUsersController {
   }
 
   @Put(':id')
+  @RequirePermission('ops_user:update')
   @ApiOperation({ summary: 'Update ops user' })
   @ApiParam({ name: 'id', type: String })
   update(@Param('id') id: string, @Body() dto: UpdateOpsUserDto, @CurrentUser() caller: RequestUser) {
@@ -59,7 +64,8 @@ export class OpsUsersController {
   }
 
   @Patch(':id/password')
-  @ApiOperation({ summary: 'Reset user password (superadmin only)' })
+  @RequirePermission('ops_user:update')
+  @ApiOperation({ summary: 'Reset user password' })
   @ApiParam({ name: 'id', type: String })
   resetPassword(
     @Param('id') id: string,
@@ -70,7 +76,8 @@ export class OpsUsersController {
   }
 
   @Patch(':id/status')
-  @ApiOperation({ summary: 'Set user status (superadmin only)' })
+  @RequirePermission('ops_user:update')
+  @ApiOperation({ summary: 'Set user status' })
   @ApiParam({ name: 'id', type: String })
   setStatus(
     @Param('id') id: string,
@@ -81,7 +88,8 @@ export class OpsUsersController {
   }
 
   @Delete(':id')
-  @ApiOperation({ summary: 'Delete ops user (superadmin only)' })
+  @RequirePermission('ops_user:delete')
+  @ApiOperation({ summary: 'Delete ops user' })
   @ApiParam({ name: 'id', type: String })
   remove(@Param('id') id: string, @CurrentUser() caller: RequestUser) {
     return this.opsUsersService.remove(id, caller);

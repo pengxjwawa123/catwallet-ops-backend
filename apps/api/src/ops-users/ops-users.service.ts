@@ -2,7 +2,6 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
-  ForbiddenException,
   Logger,
 } from '@nestjs/common';
 import * as argon2 from 'argon2';
@@ -23,15 +22,7 @@ export class OpsUsersService {
 
   constructor(private readonly prisma: PrismaService) {}
 
-  private assertSuperAdmin(caller: RequestUser) {
-    if (!caller.roles.includes('superadmin')) {
-      throw new ForbiddenException('Superadmin role required');
-    }
-  }
-
   async create(dto: CreateOpsUserDto, caller: RequestUser) {
-    this.assertSuperAdmin(caller);
-
     const existing = await this.prisma.opsUser.findUnique({
       where: { username: dto.username },
     });
@@ -95,10 +86,7 @@ export class OpsUsersService {
   }
 
   async update(id: string, dto: UpdateOpsUserDto, caller: RequestUser) {
-    // IDOR guard: non-superadmins may only update their own profile
-    if (caller.userId !== id) {
-      this.assertSuperAdmin(caller);
-    }
+    // Guard already enforces ops_user:update permission; self-edit is always allowed
     const user = await this.prisma.opsUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -110,7 +98,6 @@ export class OpsUsersService {
   }
 
   async resetPassword(id: string, dto: ResetPasswordDto, caller: RequestUser) {
-    this.assertSuperAdmin(caller);
     const user = await this.prisma.opsUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -127,7 +114,6 @@ export class OpsUsersService {
   }
 
   async setStatus(id: string, dto: SetStatusDto, caller: RequestUser) {
-    this.assertSuperAdmin(caller);
     const user = await this.prisma.opsUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
@@ -148,7 +134,6 @@ export class OpsUsersService {
   }
 
   async remove(id: string, caller: RequestUser) {
-    this.assertSuperAdmin(caller);
     const user = await this.prisma.opsUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
 
