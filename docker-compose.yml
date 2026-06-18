@@ -53,7 +53,8 @@ services:
       JWT_ACCESS_EXPIRY: ${JWT_ACCESS_EXPIRY:-15m}
       JWT_REFRESH_EXPIRY: ${JWT_REFRESH_EXPIRY:-7d}
       PORT: ${PORT:-3000}
-      NODE_ENV: ${NODE_ENV:-production}
+      # 容器内固定 production:走 JSON 日志,不依赖 dev-only 的 pino-pretty
+      NODE_ENV: production
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
