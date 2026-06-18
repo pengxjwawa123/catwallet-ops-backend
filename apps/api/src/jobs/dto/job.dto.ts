@@ -6,6 +6,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { JobStatus } from '@prisma/client';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class EnqueueJobDto {
   @ApiProperty({ example: 'send-email' })
@@ -18,7 +19,7 @@ export class EnqueueJobDto {
   payload?: Record<string, unknown>;
 }
 
-export class JobQueryDto {
+export class JobQueryDto extends PaginationDto {
   @ApiPropertyOptional({ example: 'default' })
   @IsOptional()
   @IsString()
