@@ -6,8 +6,8 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "nest build",
-    "start": "node dist/apps/api/src/main",
+    "build": "nest build && tsc -p tsconfig.seed.json",
+    "start": "node dist/main",
     "start:dev": "nest start --watch",
     "lint": "eslint \"apps/**/*.ts\" --fix",
     "typecheck": "tsc --noEmit",
@@ -17,7 +17,8 @@
     "prisma:migrate": "prisma migrate deploy",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:validate": "prisma validate",
-    "prisma:seed": "ts-node --project tsconfig.json prisma/seed.ts"
+    "prisma:seed": "ts-node --project tsconfig.json prisma/seed.ts",
+    "prisma:seed:prod": "node dist/seed.js"
   },
   "prisma": {
     "seed": "ts-node --project tsconfig.json prisma/seed.ts"
