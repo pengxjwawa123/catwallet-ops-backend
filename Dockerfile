@@ -5,8 +5,8 @@ FROM node:22-alpine AS deps
 
 WORKDIR /app
 
-# Install OS-level build deps (needed for argon2 native binding)
-RUN apk add --no-cache python3 make g++
+# Install OS-level build deps (argon2 native binding) + OpenSSL for Prisma engine
+RUN apk add --no-cache python3 make g++ openssl libc6-compat
 
 COPY package*.json ./
 COPY prisma ./prisma/
@@ -19,6 +19,9 @@ RUN npm ci
 FROM node:22-alpine AS build
 
 WORKDIR /app
+
+# OpenSSL needed for `prisma generate`
+RUN apk add --no-cache openssl libc6-compat
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
@@ -34,6 +37,9 @@ FROM node:22-alpine AS runtime
 WORKDIR /app
 
 ENV NODE_ENV=production
+
+# OpenSSL needed for Prisma engine at runtime (db push / migrate deploy / queries)
+RUN apk add --no-cache openssl libc6-compat
 
 # Install only production dependencies (no dev tooling)
 COPY package*.json ./
