@@ -49,7 +49,7 @@ async function main() {
 
   const adminUser = await prisma.opsUser.upsert({
     where: { username: adminUsername },
-    update: {},
+    update: { passwordHash, status: 'ACTIVE' },
     create: {
       username: adminUsername,
       passwordHash,
