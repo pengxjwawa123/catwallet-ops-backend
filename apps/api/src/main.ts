@@ -25,10 +25,13 @@ async function bootstrap() {
   app.useGlobalFilters(new AllExceptionsFilter());
   app.useGlobalInterceptors(new TransformInterceptor());
 
-  // CORS
+  // CORS — bearer-token API; credentials:true + wildcard is forbidden by browsers.
+  // In production, require an explicit CORS_ORIGIN. In dev, allow all for convenience.
+  const isProduction = process.env.NODE_ENV === 'production';
+  const corsOrigin = process.env.CORS_ORIGIN;
   app.enableCors({
-    origin: process.env.CORS_ORIGIN ?? '*',
-    credentials: true,
+    origin: isProduction ? (corsOrigin ?? false) : (corsOrigin ?? '*'),
+    credentials: false, // bearer-token API does not need cookie credentials
   });
 
   // Swagger
