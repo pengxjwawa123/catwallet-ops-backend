@@ -1,0 +1,208 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+model OpsUser {
+  id           String    @id @default(cuid())
+  username     String    @unique
+  email        String?   @unique
+  passwordHash String
+  twoFASecret  String?
+  twoFAEnabled Boolean   @default(false)
+  status       UserStatus @default(ACTIVE)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  userRoles     OpsUserRole[]
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  @@index([username])
+  @@index([email])
+  @@map("ops_users")
+}
+
+model OpsRole {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  userRoles       OpsUserRole[]
+  rolePermissions OpsRolePermission[]
+
+  @@map("ops_roles")
+}
+
+model OpsPermission {
+  id          String   @id @default(cuid())
+  resource    String
+  action      String
+  description String?
+  createdAt   DateTime @default(now())
+
+  rolePermissions OpsRolePermission[]
+
+  @@unique([resource, action])
+  @@index([resource])
+  @@map("ops_permissions")
+}
+
+model OpsUserRole {
+  id        String   @id @default(cuid())
+  opsUserId String
+  opsRoleId String
+  createdAt DateTime @default(now())
+
+  opsUser OpsUser @relation(fields: [opsUserId], references: [id], onDelete: Cascade)
+  opsRole OpsRole @relation(fields: [opsRoleId], references: [id], onDelete: Cascade)
+
+  @@unique([opsUserId, opsRoleId])
+  @@index([opsUserId])
+  @@index([opsRoleId])
+  @@map("ops_user_roles")
+}
+
+model OpsRolePermission {
+  id              String   @id @default(cuid())
+  opsRoleId       String
+  opsPermissionId String
+  createdAt       DateTime @default(now())
+
+  opsRole       OpsRole       @relation(fields: [opsRoleId], references: [id], onDelete: Cascade)
+  opsPermission OpsPermission @relation(fields: [opsPermissionId], references: [id], onDelete: Cascade)
+
+  @@unique([opsRoleId, opsPermissionId])
+  @@index([opsRoleId])
+  @@map("ops_role_permissions")
+}
+
+model RefreshToken {
+  id        String   @id @default(cuid())
+  tokenHash String   @unique
+  opsUserId String
+  ip        String?
+  userAgent String?
+  expiresAt DateTime
+  revoked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  opsUser OpsUser @relation(fields: [opsUserId], references: [id], onDelete: Cascade)
+
+  @@index([opsUserId])
+  @@index([tokenHash])
+  @@map("refresh_tokens")
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actorName  String?
+  action     String
+  target     String?
+  targetId   String?
+  beforeJson Json?
+  afterJson  Json?
+  ip         String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  actor OpsUser? @relation(fields: [actorId], references: [id], onDelete: SetNull)
+
+  @@index([actorId])
+  @@index([action])
+  @@index([target])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+enum FlagStatus {
+  ENABLED
+  DISABLED
+}
+
+model FeatureFlag {
+  id          String     @id @default(cuid())
+  key         String     @unique
+  description String?
+  status      FlagStatus @default(DISABLED)
+  payload     Json?
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@index([key])
+  @@map("feature_flags")
+}
+
+model RemoteConfig {
+  id          String   @id @default(cuid())
+  key         String   @unique
+  value       String
+  description String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([key])
+  @@map("remote_configs")
+}
+
+enum AnnouncementStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+model Announcement {
+  id          String             @id @default(cuid())
+  title       String
+  content     String
+  status      AnnouncementStatus @default(DRAFT)
+  publishedAt DateTime?
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+
+  @@index([status])
+  @@map("announcements")
+}
+
+enum JobStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  RETRYING
+}
+
+model Job {
+  id          String    @id @default(cuid())
+  queue       String
+  name        String
+  payload     Json?
+  status      JobStatus @default(PENDING)
+  attempts    Int       @default(0)
+  maxAttempts Int       @default(3)
+  result      Json?
+  error       String?
+  scheduledAt DateTime?
+  startedAt   DateTime?
+  finishedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([queue])
+  @@index([status])
+  @@index([createdAt])
+  @@map("jobs")
+}

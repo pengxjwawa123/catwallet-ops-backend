@@ -1,0 +1,35 @@
+# Dependencies
+node_modules/
+
+# Build output
+dist/
+
+# Environment – never commit real secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+pino.log
+
+# Test coverage
+coverage/
+
+# OS artefacts
+.DS_Store
+Thumbs.db
+
+# Prisma generated client (regenerated via prisma generate)
+node_modules/.prisma/
+
+# IDE
+.vscode/
+.idea/
+
+# Misc
+*.tsbuildinfo
+
+# OMC tooling state
+.omc/
