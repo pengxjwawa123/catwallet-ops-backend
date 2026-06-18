@@ -42,7 +42,8 @@ async function bootstrap() {
   SwaggerModule.setup('docs', app, document);
 
   const port = parseInt(process.env.PORT ?? '3000', 10);
-  await app.listen(port);
+  // 显式绑定 0.0.0.0,确保容器内端口映射可从宿主机访问
+  await app.listen(port, '0.0.0.0');
   const logger = app.get(Logger);
   logger.log(`Application listening on port ${port}`, 'Bootstrap');
   logger.log(`Swagger docs available at http://localhost:${port}/docs`, 'Bootstrap');
