@@ -19,5 +19,5 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "exclude": ["node_modules", "dist", "test", "prisma", "**/*spec.ts"]
+  "exclude": ["node_modules", "dist", "test", "prisma", "apps/admin-web", "**/*spec.ts"]
 }

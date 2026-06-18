@@ -18,6 +18,6 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false
   },
-  "include": ["apps/**/*", "prisma/**/*"],
-  "exclude": ["node_modules", "dist"]
+  "include": ["apps/api/**/*", "prisma/**/*"],
+  "exclude": ["node_modules", "dist", "apps/admin-web"]
 }
