@@ -62,6 +62,19 @@ services:
     networks:
       - ops_net
 
+  admin-web:
+    build:
+      context: ./apps/admin-web
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      # 浏览器访问 http://<host>:${WEB_PORT}/ 打开管理界面;/api 反代到 app
+      - '${WEB_PORT:-8080}:80'
+    networks:
+      - ops_net
+
 volumes:
   postgres_data:
     driver: local
