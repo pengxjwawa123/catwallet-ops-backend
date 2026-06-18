@@ -9,7 +9,6 @@ import {
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JobsService } from './jobs.service';
 import { EnqueueJobDto, JobQueryDto } from './dto/job.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 import { CurrentUser } from '../auth/decorators/current-user.decorator';
 import { RequestUser } from '../auth/strategies/jwt.strategy';
@@ -29,7 +28,7 @@ export class JobsController {
 
   @Get()
   @ApiOperation({ summary: 'List jobs with pagination and optional filters (any authenticated user)' })
-  findAll(@Query() query: JobQueryDto & PaginationDto) {
+  findAll(@Query() query: JobQueryDto) {
     return this.jobsService.findAll(query);
   }
 

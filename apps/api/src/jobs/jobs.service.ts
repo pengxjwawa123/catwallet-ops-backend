@@ -2,7 +2,6 @@ import { Injectable, NotFoundException, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { paginate } from '../common/dto/paginated-result';
 import { EnqueueJobDto, JobQueryDto } from './dto/job.dto';
 import { JobStatus, Prisma } from '@prisma/client';
@@ -40,7 +39,7 @@ export class JobsService {
     return job;
   }
 
-  async findAll(query: JobQueryDto & PaginationDto) {
+  async findAll(query: JobQueryDto) {
     const { page = 1, pageSize = 20, queue, status } = query;
     const skip = (page - 1) * pageSize;
     const where: Record<string, unknown> = {};
