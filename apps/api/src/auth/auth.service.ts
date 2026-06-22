@@ -141,7 +141,7 @@ export class AuthService {
     if (!user || !user.twoFASecret) {
       throw new UnauthorizedException('2FA not set up');
     }
-    const result = totpVerifySync({ token, secret: user.twoFASecret, strategy: 'totp' });
+    const result = totpVerifySync({ token, secret: user.twoFASecret, strategy: 'totp', epochTolerance: 30 });
     if (!result.valid) throw new UnauthorizedException('Invalid TOTP token');
 
     await this.prisma.opsUser.update({
@@ -159,7 +159,7 @@ export class AuthService {
     if (!user || !user.twoFASecret || !user.twoFAEnabled) {
       throw new UnauthorizedException('2FA not enabled for user');
     }
-    const result = totpVerifySync({ token, secret: user.twoFASecret, strategy: 'totp' });
+    const result = totpVerifySync({ token, secret: user.twoFASecret, strategy: 'totp', epochTolerance: 30 });
     if (!result.valid) throw new UnauthorizedException('Invalid TOTP token');
 
     return this.issueTokens(user, ip, userAgent);
