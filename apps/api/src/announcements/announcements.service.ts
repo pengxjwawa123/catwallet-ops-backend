@@ -5,7 +5,6 @@ import {
   Logger,
 } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { paginate } from '../common/dto/paginated-result';
 import {
   CreateAnnouncementDto,
@@ -26,7 +25,7 @@ export class AnnouncementsService {
     });
   }
 
-  async findAll(query: AnnouncementQueryDto & PaginationDto) {
+  async findAll(query: AnnouncementQueryDto) {
     const { page = 1, pageSize = 20, status } = query;
     const skip = (page - 1) * pageSize;
     const where = status ? { status } : {};

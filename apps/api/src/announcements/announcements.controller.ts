@@ -16,7 +16,6 @@ import {
   UpdateAnnouncementDto,
   AnnouncementQueryDto,
 } from './dto/announcement.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 
 @ApiTags('Announcements')
@@ -35,7 +34,7 @@ export class AnnouncementsController {
   @Get()
   @RequirePermission('announcement:read')
   @ApiOperation({ summary: 'List announcements (filterable by status) with pagination' })
-  findAll(@Query() query: AnnouncementQueryDto & PaginationDto) {
+  findAll(@Query() query: AnnouncementQueryDto) {
     return this.announcementsService.findAll(query);
   }
 

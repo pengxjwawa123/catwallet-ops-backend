@@ -6,6 +6,7 @@ import {
 } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { AnnouncementStatus } from '@prisma/client';
+import { PaginationDto } from '../../common/dto/pagination.dto';
 
 export class CreateAnnouncementDto {
   @ApiProperty({ example: 'System Maintenance' })
@@ -31,7 +32,7 @@ export class UpdateAnnouncementDto {
   content?: string;
 }
 
-export class AnnouncementQueryDto {
+export class AnnouncementQueryDto extends PaginationDto {
   @ApiPropertyOptional({ enum: AnnouncementStatus })
   @IsOptional()
   @IsEnum(AnnouncementStatus)
