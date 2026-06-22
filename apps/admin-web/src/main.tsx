@@ -18,7 +18,9 @@ function Root() {
       locale={locale}
       theme={{
         token: {
-          colorPrimary: '#1677ff',
+          colorPrimary: '#ffd400',
+          // 亮黄主色上用深色文字，避免白字在黄底上不可读
+          colorTextLightSolid: 'rgba(0, 0, 0, 0.88)',
           borderRadius: 8,
           fontFamily: "'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', Arial, sans-serif",
         },
