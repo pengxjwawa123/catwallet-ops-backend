@@ -150,7 +150,7 @@ export default function MainLayout() {
             padding: collapsed ? 0 : '0 20px',
             fontWeight: 700,
             fontSize: 16,
-            color: token.colorPrimary,
+            color: 'rgba(0, 0, 0, 0.88)',
             borderBottom: `1px solid ${token.colorBorderSecondary}`,
             letterSpacing: 1,
           }}
