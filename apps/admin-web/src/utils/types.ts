@@ -108,6 +108,20 @@ export interface Announcement {
   updatedAt: string;
 }
 
+// I18n
+export interface I18nEntry {
+  id: string;
+  key: string;
+  language: string;
+  value: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface I18nConfigResponse {
+  langs: Record<string, Record<string, string>>;
+}
+
 // Jobs
 export interface Job {
   id: string;

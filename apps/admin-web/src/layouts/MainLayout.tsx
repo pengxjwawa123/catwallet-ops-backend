@@ -15,6 +15,7 @@ import {
   KeyOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  TranslationOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
@@ -93,6 +94,12 @@ export default function MainLayout() {
       icon: <NotificationOutlined />,
       label: t('nav.announcements'),
       show: superAdmin || hasPermission('announcement:read'),
+    },
+    {
+      key: '/i18n',
+      icon: <TranslationOutlined />,
+      label: t('nav.i18n'),
+      show: superAdmin || hasPermission('i18n:read'),
     },
     {
       key: '/jobs',

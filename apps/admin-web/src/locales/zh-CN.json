@@ -52,6 +52,7 @@
     "featureFlags": "功能开关",
     "remoteConfigs": "远程配置",
     "announcements": "公告管理",
+    "i18n": "国际化管理",
     "jobs": "任务队列"
   },
   "dashboard": {
@@ -137,6 +138,14 @@
     "publish": "发布",
     "unpublish": "撤回",
     "archive": "归档"
+  },
+  "i18n": {
+    "title": "国际化语言资源",
+    "key": "Key",
+    "language": "语言",
+    "value": "翻译文本",
+    "filterLanguage": "筛选语言",
+    "notImplemented": "该功能暂未实现"
   },
   "jobs": {
     "title": "任务队列",

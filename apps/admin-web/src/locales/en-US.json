@@ -52,6 +52,7 @@
     "featureFlags": "Feature Flags",
     "remoteConfigs": "Remote Configs",
     "announcements": "Announcements",
+    "i18n": "I18n Management",
     "jobs": "Jobs"
   },
   "dashboard": {
@@ -137,6 +138,14 @@
     "publish": "Publish",
     "unpublish": "Unpublish",
     "archive": "Archive"
+  },
+  "i18n": {
+    "title": "I18n Language Resources",
+    "key": "Key",
+    "language": "Language",
+    "value": "Translation",
+    "filterLanguage": "Filter Language",
+    "notImplemented": "This feature is not yet implemented"
   },
   "jobs": {
     "title": "Jobs",
