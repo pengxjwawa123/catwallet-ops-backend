@@ -173,4 +173,32 @@ export class I18nService {
   private async invalidateCache() {
     await this.redis.del(CACHE_KEY);
   }
+
+  async writeOpLog(action: string, operator: string | null, key: string | null, detail?: unknown) {
+    return this.prisma.i18nOpLog.create({
+      data: {
+        action,
+        operator,
+        key,
+        detail: detail as any ?? undefined,
+      },
+    });
+  }
+
+  async getOpLogs(page = 1, pageSize = 20, action?: string, key?: string) {
+    const where: Record<string, unknown> = {};
+    if (action) where.action = { contains: action, mode: 'insensitive' };
+    if (key) where.key = { contains: key, mode: 'insensitive' };
+
+    const [items, total] = await Promise.all([
+      this.prisma.i18nOpLog.findMany({
+        where,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: { createdAt: 'desc' },
+      }),
+      this.prisma.i18nOpLog.count({ where }),
+    ]);
+    return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
+  }
 }

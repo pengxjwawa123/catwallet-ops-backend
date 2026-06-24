@@ -159,7 +159,20 @@
     "importShowingPartial": "Showing first {{shown}} of {{total}} records",
     "importParseError": "Failed to parse CSV file. Please check format.",
     "importMissingKey": "CSV file missing 'key' column",
-    "importSuccess": "Successfully imported {{count}} records"
+    "importSuccess": "Successfully imported {{count}} records",
+    "tab": {
+      "translations": "Translations",
+      "opLogs": "Operation Logs"
+    },
+    "log": {
+      "title": "Operation Logs",
+      "action": "Action",
+      "operator": "Operator",
+      "key": "Key",
+      "detail": "Detail",
+      "viewDetail": "View Detail",
+      "detailTitle": "Operation Log Detail"
+    }
   },
   "jobs": {
     "title": "Jobs",

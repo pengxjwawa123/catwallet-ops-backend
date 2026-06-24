@@ -1,5 +1,5 @@
 import http from './http';
-import type { LoginResponse, OpsUser, PagedData, Role, Permission, AuditLog, FeatureFlag, RemoteConfig, Announcement, Job, I18nEntry, I18nConfigResponse } from '@/utils/types';
+import type { LoginResponse, OpsUser, PagedData, Role, Permission, AuditLog, FeatureFlag, RemoteConfig, Announcement, Job, I18nEntry, I18nConfigResponse, I18nOpLog } from '@/utils/types';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -202,6 +202,12 @@ export const i18nApi = {
 
   remove: (id: string) =>
     http.delete(`/i18n/${id}`),
+
+  getOpLogs: (params: { page?: number; pageSize?: number; action?: string; key?: string }) =>
+    http.get<unknown, PagedData<I18nOpLog>>('/i18n/op-logs', { params }),
+
+  createOpLog: (data: { action: string; operator?: string; key?: string; detail?: unknown }) =>
+    http.post<unknown, I18nOpLog>('/i18n/op-logs', data),
 };
 
 // ── Jobs ──────────────────────────────────────────────────────────────────────

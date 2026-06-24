@@ -193,6 +193,20 @@ model I18nEntry {
   @@map("i18n_entries")
 }
 
+model I18nOpLog {
+  id        String   @id @default(cuid())
+  action    String
+  operator  String?
+  key       String?
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([key])
+  @@index([createdAt])
+  @@map("i18n_op_logs")
+}
+
 enum JobStatus {
   PENDING
   RUNNING

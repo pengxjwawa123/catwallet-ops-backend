@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { I18nService } from './i18n.service';
-import { I18nConfigRequestDto, CreateI18nEntryDto, UpdateI18nEntryDto, UpsertI18nKeyDto } from './dto/i18n.dto';
+import { I18nConfigRequestDto, CreateI18nEntryDto, UpdateI18nEntryDto, UpsertI18nKeyDto, I18nOpLogQueryDto, CreateI18nOpLogDto } from './dto/i18n.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
@@ -33,6 +33,14 @@ export class I18nController {
   @ApiOperation({ summary: 'List i18n entries with pagination' })
   findAll(@Query() pagination: PaginationDto) {
     return this.i18nService.findAll(pagination.page, pagination.pageSize);
+  }
+
+  @Get('op-logs')
+  @ApiBearerAuth()
+  @RequirePermission('i18n:read')
+  @ApiOperation({ summary: 'List i18n operation logs' })
+  getOpLogs(@Query() query: I18nOpLogQueryDto) {
+    return this.i18nService.getOpLogs(query.page, query.pageSize, query.action, query.key);
   }
 
   @Get('key/:key')
@@ -94,5 +102,13 @@ export class I18nController {
   @ApiParam({ name: 'id', type: String })
   remove(@Param('id') id: string) {
     return this.i18nService.remove(id);
+  }
+
+  @Post('op-logs')
+  @ApiBearerAuth()
+  @RequirePermission('i18n:manage')
+  @ApiOperation({ summary: 'Create i18n operation log' })
+  createOpLog(@Body() dto: CreateI18nOpLogDto) {
+    return this.i18nService.writeOpLog(dto.action, dto.operator ?? null, dto.key ?? null, dto.detail);
   }
 }

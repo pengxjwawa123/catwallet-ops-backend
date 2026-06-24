@@ -1,11 +1,14 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { Button, message, Input, Modal, Form, Upload, Table, Alert } from 'antd';
+import { Button, message, Input, Modal, Form, Upload, Table, Alert, Tabs, Typography } from 'antd';
 import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { i18nApi } from '@/api';
-import type { I18nConfigResponse } from '@/utils/types';
+import type { I18nConfigResponse, I18nOpLog } from '@/utils/types';
+import dayjs from 'dayjs';
+
+const { Paragraph } = Typography;
 
 function parseCsv(text: string): string[][] {
   const rows: string[][] = [];
@@ -65,6 +68,7 @@ interface I18nRow {
 export default function I18nPage() {
   const { t } = useTranslation();
   const actionRef = useRef<ActionType>();
+  const logActionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [configData, setConfigData] = useState<I18nConfigResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -73,6 +77,7 @@ export default function I18nPage() {
   const [editingKey, setEditingKey] = useState<string | null>(null);
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importData, setImportData] = useState<I18nRow[]>([]);
+  const [logDetail, setLogDetail] = useState<I18nOpLog | null>(null);
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -149,6 +154,7 @@ export default function I18nPage() {
     // TODO: call real API when backend is ready
     message.success(t('common.success'));
     setModalOpen(false);
+    logActionRef.current?.reload();
   };
 
   const handleImportFile = (file: File) => {
@@ -201,6 +207,7 @@ export default function I18nPage() {
     message.success(t('i18n.importSuccess', { count: importData.length }));
     setImportModalOpen(false);
     setImportData([]);
+    logActionRef.current?.reload();
   };
 
   const handleDownloadTemplate = () => {
@@ -247,65 +254,116 @@ export default function I18nPage() {
     return cols;
   }, [languages, t]);
 
+  const logColumns: ProColumns<I18nOpLog>[] = [
+    { title: t('i18n.log.action'), dataIndex: 'action', width: 120 },
+    { title: t('i18n.log.operator'), dataIndex: 'operator', width: 120 },
+    { title: t('i18n.log.key'), dataIndex: 'key', width: 200, ellipsis: true },
+    {
+      title: t('common.createdAt'),
+      dataIndex: 'createdAt',
+      width: 180,
+      render: (_, record) => dayjs(record.createdAt).format('YYYY-MM-DD HH:mm:ss'),
+    },
+    {
+      title: t('common.actions'),
+      valueType: 'option',
+      width: 80,
+      render: (_, record) => [
+        <Button key="detail" type="link" size="small" onClick={() => setLogDetail(record)}>
+          {t('i18n.log.viewDetail')}
+        </Button>,
+      ],
+    },
+  ];
+
   return (
     <>
-      <ProTable<I18nRow>
-        headerTitle={t('i18n.title')}
-        actionRef={actionRef}
-        rowKey="key"
-        loading={loading}
-        search={false}
-        dataSource={filteredRows}
-        scroll={{ x: undefined }}
-        toolBarRender={() => [
-          <Input.Search
-            key="search"
-            placeholder={t('common.search')}
-            allowClear
-            style={{ width: 240 }}
-            onSearch={(val) => setSearchKey(val)}
-            onChange={(e) => { if (!e.target.value) setSearchKey(''); }}
-          />,
-          <Button
-            key="reload"
-            icon={<ReloadOutlined />}
-            onClick={fetchConfig}
-          >
-            {t('common.reset')}
-          </Button>,
-          <Button
-            key="template"
-            icon={<DownloadOutlined />}
-            onClick={handleDownloadTemplate}
-          >
-            {t('i18n.downloadTemplate')}
-          </Button>,
-          <Upload
-            key="import"
-            accept=".csv"
-            showUploadList={false}
-            beforeUpload={handleImportFile}
-          >
-            <Button icon={<UploadOutlined />}>
-              {t('i18n.import')}
-            </Button>
-          </Upload>,
-          <Button
-            key="create"
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={openCreate}
-          >
-            {t('common.create')}
-          </Button>,
+      <Tabs
+        defaultActiveKey="translations"
+        items={[
+          {
+            key: 'translations',
+            label: t('i18n.tab.translations'),
+            children: (
+              <ProTable<I18nRow>
+                headerTitle={t('i18n.title')}
+                actionRef={actionRef}
+                rowKey="key"
+                loading={loading}
+                search={false}
+                dataSource={filteredRows}
+                scroll={{ x: undefined }}
+                toolBarRender={() => [
+                  <Input.Search
+                    key="search"
+                    placeholder={t('common.search')}
+                    allowClear
+                    style={{ width: 240 }}
+                    onSearch={(val) => setSearchKey(val)}
+                    onChange={(e) => { if (!e.target.value) setSearchKey(''); }}
+                  />,
+                  <Button
+                    key="reload"
+                    icon={<ReloadOutlined />}
+                    onClick={fetchConfig}
+                  >
+                    {t('common.reset')}
+                  </Button>,
+                  <Button
+                    key="template"
+                    icon={<DownloadOutlined />}
+                    onClick={handleDownloadTemplate}
+                  >
+                    {t('i18n.downloadTemplate')}
+                  </Button>,
+                  <Upload
+                    key="import"
+                    accept=".csv"
+                    showUploadList={false}
+                    beforeUpload={handleImportFile}
+                  >
+                    <Button icon={<UploadOutlined />}>
+                      {t('i18n.import')}
+                    </Button>
+                  </Upload>,
+                  <Button
+                    key="create"
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={openCreate}
+                  >
+                    {t('common.create')}
+                  </Button>,
+                ]}
+                columns={columns}
+                pagination={{
+                  showSizeChanger: true,
+                  defaultPageSize: 50,
+                  pageSizeOptions: ['20', '50', '100', '200'],
+                  showTotal: (total) => t('common.total', { total }),
+                }}
+              />
+            ),
+          },
+          {
+            key: 'logs',
+            label: t('i18n.tab.opLogs'),
+            children: (
+              <ProTable<I18nOpLog>
+                headerTitle={t('i18n.log.title')}
+                actionRef={logActionRef}
+                rowKey="id"
+                search={false}
+                request={async ({ current = 1, pageSize = 20 }) => {
+                  const data = await i18nApi.getOpLogs({ page: current, pageSize });
+                  return { data: data.items, total: data.total, success: true };
+                }}
+                columns={logColumns}
+                pagination={{ showSizeChanger: true, defaultPageSize: 20 }}
+              />
+            ),
+          },
         ]}
-        columns={columns}
-        pagination={{
-          showSizeChanger: true,
-          defaultPageSize: 50,
-          pageSizeOptions: ['20', '50', '100', '200'],
-          showTotal: (total) => t('common.total', { total }),
-        }}
       />
 
       <Modal
@@ -368,6 +426,33 @@ export default function I18nPage() {
         {importData.length > 100 && (
           <div style={{ marginTop: 8, color: '#999' }}>
             {t('i18n.importShowingPartial', { shown: 100, total: importData.length })}
+          </div>
+        )}
+      </Modal>
+
+      <Modal
+        title={t('i18n.log.detailTitle')}
+        open={!!logDetail}
+        onCancel={() => setLogDetail(null)}
+        footer={null}
+        width={600}
+      >
+        {logDetail && (
+          <div>
+            <p><strong>{t('i18n.log.action')}:</strong> {logDetail.action}</p>
+            <p><strong>{t('i18n.log.operator')}:</strong> {logDetail.operator || '-'}</p>
+            <p><strong>{t('i18n.log.key')}:</strong> {logDetail.key || '-'}</p>
+            <p><strong>{t('common.createdAt')}:</strong> {dayjs(logDetail.createdAt).format('YYYY-MM-DD HH:mm:ss')}</p>
+            {logDetail.detail && (
+              <>
+                <strong>{t('i18n.log.detail')}:</strong>
+                <Paragraph>
+                  <pre style={{ fontSize: 12, maxHeight: 300, overflow: 'auto', background: '#f5f5f5', padding: 12, borderRadius: 6 }}>
+                    {JSON.stringify(logDetail.detail, null, 2)}
+                  </pre>
+                </Paragraph>
+              </>
+            )}
           </div>
         )}
       </Modal>

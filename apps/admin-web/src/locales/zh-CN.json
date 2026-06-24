@@ -159,7 +159,20 @@
     "importShowingPartial": "仅显示前 {{shown}} 条，共 {{total}} 条",
     "importParseError": "CSV 文件解析失败，请检查格式",
     "importMissingKey": "CSV 文件缺少 key 列",
-    "importSuccess": "成功导入 {{count}} 条翻译记录"
+    "importSuccess": "成功导入 {{count}} 条翻译记录",
+    "tab": {
+      "translations": "翻译列表",
+      "opLogs": "操作日志"
+    },
+    "log": {
+      "title": "操作日志",
+      "action": "操作类型",
+      "operator": "操作人",
+      "key": "Key",
+      "detail": "详情",
+      "viewDetail": "查看详情",
+      "detailTitle": "操作日志详情"
+    }
   },
   "jobs": {
     "title": "任务队列",
