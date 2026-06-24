@@ -52,6 +52,9 @@ services:
       # 容器内固定 production:走 JSON 日志,不依赖 dev-only 的 pino-pretty
       NODE_ENV: production
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
+      CATWALLET_API_BASE_URL: ${CATWALLET_API_BASE_URL:-https://api.catwallet.ai}
+      CATWALLET_API_KEY: ${CATWALLET_API_KEY:-}
+      CATWALLET_API_SECRET_KEY: ${CATWALLET_API_SECRET_KEY:-}
       SENTRY_DSN: ${SENTRY_DSN:-}
     ports:
       - '${APP_PORT:-3001}:3000'

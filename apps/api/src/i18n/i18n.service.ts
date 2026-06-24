@@ -66,7 +66,14 @@ export class I18nService {
     const cached = await this.redis.get(cacheKey);
     if (cached) return JSON.parse(cached);
 
-    const url = `${this.apiBaseUrl}/gt/wallet/api/discover/i18n/config`;
+    let url: string;
+    try {
+      url = new URL('/gt/wallet/api/discover/i18n/config', this.apiBaseUrl).toString();
+    } catch {
+      this.logger.error('CATWALLET_API_BASE_URL must be an absolute URL');
+      return { langs: {} };
+    }
+
     const timestamp = Date.now().toString();
     const body: Record<string, unknown> = { timestamp };
     if (language) body.language = language;
