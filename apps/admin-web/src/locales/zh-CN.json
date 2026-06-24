@@ -52,6 +52,7 @@
     "featureFlags": "功能开关",
     "remoteConfigs": "远程配置",
     "announcements": "公告管理",
+    "i18n": "国际化管理",
     "jobs": "任务队列"
   },
   "dashboard": {
@@ -137,6 +138,41 @@
     "publish": "发布",
     "unpublish": "撤回",
     "archive": "归档"
+  },
+  "i18n": {
+    "title": "国际化语言资源",
+    "key": "Key",
+    "language": "语言",
+    "value": "翻译文本",
+    "filterLanguage": "筛选语言",
+    "notImplemented": "该功能暂未实现",
+    "createEntry": "新建翻译",
+    "editEntry": "编辑翻译",
+    "keyRequired": "请输入翻译 Key",
+    "valuePlaceholder": "请输入 {{lang}} 翻译文本",
+    "atLeastOneLang": "至少填写一种语言的翻译",
+    "import": "批量导入",
+    "downloadTemplate": "下载模板",
+    "importPreview": "导入预览",
+    "confirmImport": "确认导入",
+    "importPreviewTip": "共解析到 {{count}} 条翻译记录，确认后将批量导入",
+    "importShowingPartial": "仅显示前 {{shown}} 条，共 {{total}} 条",
+    "importParseError": "CSV 文件解析失败，请检查格式",
+    "importMissingKey": "CSV 文件缺少 key 列",
+    "importSuccess": "成功导入 {{count}} 条翻译记录",
+    "tab": {
+      "translations": "翻译列表",
+      "opLogs": "操作日志"
+    },
+    "log": {
+      "title": "操作日志",
+      "action": "操作类型",
+      "operator": "操作人",
+      "key": "Key",
+      "detail": "详情",
+      "viewDetail": "查看详情",
+      "detailTitle": "操作日志详情"
+    }
   },
   "jobs": {
     "title": "任务队列",

@@ -52,6 +52,7 @@
     "featureFlags": "Feature Flags",
     "remoteConfigs": "Remote Configs",
     "announcements": "Announcements",
+    "i18n": "I18n Management",
     "jobs": "Jobs"
   },
   "dashboard": {
@@ -137,6 +138,41 @@
     "publish": "Publish",
     "unpublish": "Unpublish",
     "archive": "Archive"
+  },
+  "i18n": {
+    "title": "I18n Language Resources",
+    "key": "Key",
+    "language": "Language",
+    "value": "Translation",
+    "filterLanguage": "Filter Language",
+    "notImplemented": "This feature is not yet implemented",
+    "createEntry": "Create Translation",
+    "editEntry": "Edit Translation",
+    "keyRequired": "Please enter a translation key",
+    "valuePlaceholder": "Enter {{lang}} translation",
+    "atLeastOneLang": "Please provide at least one language translation",
+    "import": "Batch Import",
+    "downloadTemplate": "Download Template",
+    "importPreview": "Import Preview",
+    "confirmImport": "Confirm Import",
+    "importPreviewTip": "Parsed {{count}} translation records. Confirm to import.",
+    "importShowingPartial": "Showing first {{shown}} of {{total}} records",
+    "importParseError": "Failed to parse CSV file. Please check format.",
+    "importMissingKey": "CSV file missing 'key' column",
+    "importSuccess": "Successfully imported {{count}} records",
+    "tab": {
+      "translations": "Translations",
+      "opLogs": "Operation Logs"
+    },
+    "log": {
+      "title": "Operation Logs",
+      "action": "Action",
+      "operator": "Operator",
+      "key": "Key",
+      "detail": "Detail",
+      "viewDetail": "View Detail",
+      "detailTitle": "Operation Log Detail"
+    }
   },
   "jobs": {
     "title": "Jobs",

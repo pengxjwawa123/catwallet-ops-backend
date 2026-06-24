@@ -16,6 +16,7 @@ import { FeatureFlagsModule } from './feature-flags/feature-flags.module';
 import { RemoteConfigsModule } from './remote-configs/remote-configs.module';
 import { AnnouncementsModule } from './announcements/announcements.module';
 import { JobsModule } from './jobs/jobs.module';
+import { I18nModule } from './i18n/i18n.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
 import { PermissionsGuard } from './auth/guards/permissions.guard';
 import { AuditInterceptor } from './common/interceptors/audit.interceptor';
@@ -63,6 +64,7 @@ import { PrismaService } from './prisma/prisma.service';
     RemoteConfigsModule,
     AnnouncementsModule,
     JobsModule,
+    I18nModule,
   ],
   providers: [
     // Guard order: Throttler → JwtAuth → Permissions

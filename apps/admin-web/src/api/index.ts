@@ -1,5 +1,5 @@
 import http from './http';
-import type { LoginResponse, OpsUser, PagedData, Role, Permission, AuditLog, FeatureFlag, RemoteConfig, Announcement, Job } from '@/utils/types';
+import type { LoginResponse, OpsUser, PagedData, Role, Permission, AuditLog, FeatureFlag, RemoteConfig, Announcement, Job, I18nEntry, I18nConfigResponse, I18nOpLog } from '@/utils/types';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -171,6 +171,43 @@ export const announcementsApi = {
 
   remove: (id: string) =>
     http.delete(`/announcements/${id}`),
+};
+
+// ── I18n ──────────────────────────────────────────────────────────────────────
+
+export const i18nApi = {
+  getConfig: (language?: string) =>
+    http.post<unknown, I18nConfigResponse>('/i18n/config', { language }),
+
+  list: (params: { page?: number; pageSize?: number }) =>
+    http.get<unknown, PagedData<I18nEntry>>('/i18n', { params }),
+
+  get: (id: string) =>
+    http.get<unknown, I18nEntry>(`/i18n/${id}`),
+
+  getByKey: (key: string) =>
+    http.get<unknown, { key: string; translations: Record<string, string> }>(`/i18n/key/${encodeURIComponent(key)}`),
+
+  upsertKey: (data: { key: string; translations: Record<string, string> }) =>
+    http.post<unknown, I18nEntry[]>('/i18n/key', data),
+
+  create: (data: { key: string; language: string; value: string }) =>
+    http.post<unknown, I18nEntry>('/i18n', data),
+
+  update: (id: string, data: { value?: string }) =>
+    http.put<unknown, I18nEntry>(`/i18n/${id}`, data),
+
+  removeByKey: (key: string) =>
+    http.delete(`/i18n/key/${encodeURIComponent(key)}`),
+
+  remove: (id: string) =>
+    http.delete(`/i18n/${id}`),
+
+  getOpLogs: (params: { page?: number; pageSize?: number; action?: string; key?: string }) =>
+    http.get<unknown, PagedData<I18nOpLog>>('/i18n/op-logs', { params }),
+
+  createOpLog: (data: { action: string; operator?: string; key?: string; detail?: unknown }) =>
+    http.post<unknown, I18nOpLog>('/i18n/op-logs', data),
 };
 
 // ── Jobs ──────────────────────────────────────────────────────────────────────

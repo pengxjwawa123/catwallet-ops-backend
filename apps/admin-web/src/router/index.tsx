@@ -14,6 +14,7 @@ const FeatureFlagsPage = lazy(() => import('@/pages/feature-flags/FeatureFlagsPa
 const RemoteConfigsPage= lazy(() => import('@/pages/remote-configs/RemoteConfigsPage'));
 const AnnouncementsPage= lazy(() => import('@/pages/announcements/AnnouncementsPage'));
 const JobsPage         = lazy(() => import('@/pages/jobs/JobsPage'));
+const I18nPage         = lazy(() => import('@/pages/i18n/I18nPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -43,6 +44,7 @@ export default function AppRouter() {
           <Route path="feature-flags"   element={<FeatureFlagsPage />} />
           <Route path="remote-configs"  element={<RemoteConfigsPage />} />
           <Route path="announcements"   element={<AnnouncementsPage />} />
+          <Route path="i18n"            element={<I18nPage />} />
           <Route path="jobs"            element={<JobsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

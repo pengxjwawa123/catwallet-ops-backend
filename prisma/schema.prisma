@@ -179,6 +179,34 @@ model Announcement {
   @@map("announcements")
 }
 
+model I18nEntry {
+  id        String   @id @default(cuid())
+  key       String
+  language  String
+  value     String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([key, language])
+  @@index([key])
+  @@index([language])
+  @@map("i18n_entries")
+}
+
+model I18nOpLog {
+  id        String   @id @default(cuid())
+  action    String
+  operator  String?
+  key       String?
+  detail    Json?
+  createdAt DateTime @default(now())
+
+  @@index([action])
+  @@index([key])
+  @@index([createdAt])
+  @@map("i18n_op_logs")
+}
+
 enum JobStatus {
   PENDING
   RUNNING
