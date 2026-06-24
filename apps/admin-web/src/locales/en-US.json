@@ -150,7 +150,16 @@
     "editEntry": "Edit Translation",
     "keyRequired": "Please enter a translation key",
     "valuePlaceholder": "Enter {{lang}} translation",
-    "atLeastOneLang": "Please provide at least one language translation"
+    "atLeastOneLang": "Please provide at least one language translation",
+    "import": "Batch Import",
+    "downloadTemplate": "Download Template",
+    "importPreview": "Import Preview",
+    "confirmImport": "Confirm Import",
+    "importPreviewTip": "Parsed {{count}} translation records. Confirm to import.",
+    "importShowingPartial": "Showing first {{shown}} of {{total}} records",
+    "importParseError": "Failed to parse CSV file. Please check format.",
+    "importMissingKey": "CSV file missing 'key' column",
+    "importSuccess": "Successfully imported {{count}} records"
   },
   "jobs": {
     "title": "Jobs",

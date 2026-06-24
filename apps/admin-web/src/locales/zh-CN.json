@@ -150,7 +150,16 @@
     "editEntry": "编辑翻译",
     "keyRequired": "请输入翻译 Key",
     "valuePlaceholder": "请输入 {{lang}} 翻译文本",
-    "atLeastOneLang": "至少填写一种语言的翻译"
+    "atLeastOneLang": "至少填写一种语言的翻译",
+    "import": "批量导入",
+    "downloadTemplate": "下载模板",
+    "importPreview": "导入预览",
+    "confirmImport": "确认导入",
+    "importPreviewTip": "共解析到 {{count}} 条翻译记录，确认后将批量导入",
+    "importShowingPartial": "仅显示前 {{shown}} 条，共 {{total}} 条",
+    "importParseError": "CSV 文件解析失败，请检查格式",
+    "importMissingKey": "CSV 文件缺少 key 列",
+    "importSuccess": "成功导入 {{count}} 条翻译记录"
   },
   "jobs": {
     "title": "任务队列",

@@ -1,11 +1,61 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { Button, message, Input, Modal, Form } from 'antd';
-import { PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { Button, message, Input, Modal, Form, Upload, Table, Alert } from 'antd';
+import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { i18nApi } from '@/api';
 import type { I18nConfigResponse } from '@/utils/types';
+
+function parseCsv(text: string): string[][] {
+  const rows: string[][] = [];
+  let current = '';
+  let inQuotes = false;
+  let row: string[] = [];
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (text[i + 1] === '"') {
+          current += '"';
+          i++;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+      } else if (ch === ',') {
+        row.push(current);
+        current = '';
+      } else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
+        row.push(current);
+        current = '';
+        rows.push(row);
+        row = [];
+        if (ch === '\r') i++;
+      } else {
+        current += ch;
+      }
+    }
+  }
+  if (current || row.length) {
+    row.push(current);
+    rows.push(row);
+  }
+  return rows;
+}
+
+function escapeCsvField(value: string): string {
+  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+    return `"${value.replace(/"/g, '""')}"`;
+  }
+  return value;
+}
 
 interface I18nRow {
   key: string;
@@ -21,6 +71,8 @@ export default function I18nPage() {
   const [searchKey, setSearchKey] = useState('');
   const [modalOpen, setModalOpen] = useState(false);
   const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [importModalOpen, setImportModalOpen] = useState(false);
+  const [importData, setImportData] = useState<I18nRow[]>([]);
 
   const fetchConfig = async () => {
     setLoading(true);
@@ -99,6 +151,75 @@ export default function I18nPage() {
     setModalOpen(false);
   };
 
+  const handleImportFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      try {
+        const text = e.target?.result as string;
+        const csvRows = parseCsv(text);
+        if (csvRows.length < 2) {
+          message.error(t('i18n.importParseError'));
+          return;
+        }
+        const header = csvRows[0].map((h) => h.trim().toLowerCase());
+        const keyIdx = header.indexOf('key');
+        if (keyIdx === -1) {
+          message.error(t('i18n.importMissingKey'));
+          return;
+        }
+        const langIndices: { lang: string; idx: number }[] = [];
+        for (let i = 0; i < header.length; i++) {
+          if (i !== keyIdx && header[i]) {
+            langIndices.push({ lang: header[i], idx: i });
+          }
+        }
+        const rows: I18nRow[] = [];
+        for (let r = 1; r < csvRows.length; r++) {
+          const cells = csvRows[r];
+          const key = cells[keyIdx]?.trim();
+          if (!key) continue;
+          const row: I18nRow = { key };
+          for (const { lang, idx } of langIndices) {
+            const val = cells[idx]?.trim();
+            if (val) row[lang] = val;
+          }
+          rows.push(row);
+        }
+        rows.sort((a, b) => a.key.localeCompare(b.key));
+        setImportData(rows);
+        setImportModalOpen(true);
+      } catch {
+        message.error(t('i18n.importParseError'));
+      }
+    };
+    reader.readAsText(file);
+    return false;
+  };
+
+  const handleImportConfirm = () => {
+    // TODO: call real batch import API when backend is ready
+    message.success(t('i18n.importSuccess', { count: importData.length }));
+    setImportModalOpen(false);
+    setImportData([]);
+  };
+
+  const handleDownloadTemplate = () => {
+    const langs = languages.length ? languages : ['en', 'zh'];
+    const header = ['key', ...langs].map(escapeCsvField).join(',');
+    const example = [
+      ['common.confirm', ...langs.map((l) => l === 'zh' ? '确认' : 'Confirm')],
+      ['common.cancel', ...langs.map((l) => l === 'zh' ? '取消' : 'Cancel')],
+    ].map((row) => row.map(escapeCsvField).join(','));
+    const csv = [header, ...example].join('\n');
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'i18n_import_template.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const columns: ProColumns<I18nRow>[] = useMemo(() => {
     const cols: ProColumns<I18nRow>[] = [
       {
@@ -153,6 +274,23 @@ export default function I18nPage() {
             {t('common.reset')}
           </Button>,
           <Button
+            key="template"
+            icon={<DownloadOutlined />}
+            onClick={handleDownloadTemplate}
+          >
+            {t('i18n.downloadTemplate')}
+          </Button>,
+          <Upload
+            key="import"
+            accept=".csv"
+            showUploadList={false}
+            beforeUpload={handleImportFile}
+          >
+            <Button icon={<UploadOutlined />}>
+              {t('i18n.import')}
+            </Button>
+          </Upload>,
+          <Button
             key="create"
             type="primary"
             icon={<PlusOutlined />}
@@ -196,6 +334,42 @@ export default function I18nPage() {
             </Form.Item>
           ))}
         </Form>
+      </Modal>
+
+      <Modal
+        title={t('i18n.importPreview')}
+        open={importModalOpen}
+        onOk={handleImportConfirm}
+        onCancel={() => { setImportModalOpen(false); setImportData([]); }}
+        width={800}
+        okText={t('i18n.confirmImport')}
+      >
+        <Alert
+          type="info"
+          showIcon
+          message={t('i18n.importPreviewTip', { count: importData.length })}
+          style={{ marginBottom: 16 }}
+        />
+        <Table
+          dataSource={importData.slice(0, 100)}
+          rowKey="key"
+          size="small"
+          scroll={{ y: 400 }}
+          pagination={false}
+          columns={[
+            { title: 'Key', dataIndex: 'key', width: 200, ellipsis: true },
+            ...languages.map((lang) => ({
+              title: lang.toUpperCase(),
+              dataIndex: lang,
+              ellipsis: true,
+            })),
+          ]}
+        />
+        {importData.length > 100 && (
+          <div style={{ marginTop: 8, color: '#999' }}>
+            {t('i18n.importShowingPartial', { shown: 100, total: importData.length })}
+          </div>
+        )}
       </Modal>
     </>
   );
