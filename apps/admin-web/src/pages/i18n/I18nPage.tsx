@@ -458,7 +458,7 @@ export default function I18nPage() {
             <p><strong>{t('i18n.log.operator')}:</strong> {logDetail.operator || '-'}</p>
             <p><strong>{t('i18n.log.key')}:</strong> {logDetail.key || '-'}</p>
             <p><strong>{t('common.createdAt')}:</strong> {dayjs(logDetail.createdAt).format('YYYY-MM-DD HH:mm:ss')}</p>
-            {logDetail.detail && (
+            {logDetail.detail !== undefined && (
               <>
                 <strong>{t('i18n.log.detail')}:</strong>
                 <Paragraph>
