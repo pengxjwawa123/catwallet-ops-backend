@@ -185,11 +185,20 @@ export const i18nApi = {
   get: (id: string) =>
     http.get<unknown, I18nEntry>(`/i18n/${id}`),
 
+  getByKey: (key: string) =>
+    http.get<unknown, { key: string; translations: Record<string, string> }>(`/i18n/key/${encodeURIComponent(key)}`),
+
+  upsertKey: (data: { key: string; translations: Record<string, string> }) =>
+    http.post<unknown, I18nEntry[]>('/i18n/key', data),
+
   create: (data: { key: string; language: string; value: string }) =>
     http.post<unknown, I18nEntry>('/i18n', data),
 
   update: (id: string, data: { value?: string }) =>
     http.put<unknown, I18nEntry>(`/i18n/${id}`, data),
+
+  removeByKey: (key: string) =>
+    http.delete(`/i18n/key/${encodeURIComponent(key)}`),
 
   remove: (id: string) =>
     http.delete(`/i18n/${id}`),

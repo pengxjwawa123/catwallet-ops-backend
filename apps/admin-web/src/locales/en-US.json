@@ -145,7 +145,12 @@
     "language": "Language",
     "value": "Translation",
     "filterLanguage": "Filter Language",
-    "notImplemented": "This feature is not yet implemented"
+    "notImplemented": "This feature is not yet implemented",
+    "createEntry": "Create Translation",
+    "editEntry": "Edit Translation",
+    "keyRequired": "Please enter a translation key",
+    "valuePlaceholder": "Enter {{lang}} translation",
+    "atLeastOneLang": "Please provide at least one language translation"
   },
   "jobs": {
     "title": "Jobs",

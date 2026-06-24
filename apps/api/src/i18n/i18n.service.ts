@@ -1,11 +1,13 @@
 import {
   Injectable,
-  NotImplementedException,
   Logger,
+  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { createHmac } from 'crypto';
 import { RedisService } from '../common/redis/redis.service';
+import { PrismaService } from '../prisma/prisma.service';
+import { UpsertI18nKeyDto } from './dto/i18n.dto';
 
 const CACHE_KEY = 'i18n:config';
 const CACHE_TTL = 300;
@@ -52,6 +54,7 @@ export class I18nService {
   constructor(
     private readonly redis: RedisService,
     private readonly config: ConfigService,
+    private readonly prisma: PrismaService,
   ) {
     this.apiBaseUrl = this.config.get<string>('CATWALLET_API_BASE_URL') || '';
     this.apiKey = this.config.get<string>('CATWALLET_API_KEY') || '';
@@ -99,23 +102,75 @@ export class I18nService {
     return result;
   }
 
-  async findAll() {
-    throw new NotImplementedException('i18n list not yet implemented');
+  async findAll(page = 1, pageSize = 50) {
+    const [items, total] = await Promise.all([
+      this.prisma.i18nEntry.findMany({
+        skip: (page - 1) * pageSize,
+        take: pageSize,
+        orderBy: [{ key: 'asc' }, { language: 'asc' }],
+      }),
+      this.prisma.i18nEntry.count(),
+    ]);
+    return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
   }
 
-  async findOne(_id: string) {
-    throw new NotImplementedException('i18n get not yet implemented');
+  async findByKey(key: string) {
+    const entries = await this.prisma.i18nEntry.findMany({ where: { key } });
+    if (!entries.length) throw new NotFoundException(`Key "${key}" not found`);
+    const translations: Record<string, string> = {};
+    for (const e of entries) translations[e.language] = e.value;
+    return { key, translations, entries };
   }
 
-  async create(_dto: unknown) {
-    throw new NotImplementedException('i18n create not yet implemented');
+  async findOne(id: string) {
+    const entry = await this.prisma.i18nEntry.findUnique({ where: { id } });
+    if (!entry) throw new NotFoundException(`Entry ${id} not found`);
+    return entry;
   }
 
-  async update(_id: string, _dto: unknown) {
-    throw new NotImplementedException('i18n update not yet implemented');
+  async upsertKey(dto: UpsertI18nKeyDto) {
+    const ops = Object.entries(dto.translations).map(([language, value]) =>
+      this.prisma.i18nEntry.upsert({
+        where: { key_language: { key: dto.key, language } },
+        create: { key: dto.key, language, value },
+        update: { value },
+      }),
+    );
+    const results = await this.prisma.$transaction(ops);
+    await this.invalidateCache();
+    return results;
   }
 
-  async remove(_id: string) {
-    throw new NotImplementedException('i18n delete not yet implemented');
+  async create(dto: { key: string; language: string; value: string }) {
+    const result = await this.prisma.i18nEntry.create({ data: dto });
+    await this.invalidateCache();
+    return result;
+  }
+
+  async update(id: string, dto: { value?: string }) {
+    const entry = await this.prisma.i18nEntry.findUnique({ where: { id } });
+    if (!entry) throw new NotFoundException(`Entry ${id} not found`);
+    const result = await this.prisma.i18nEntry.update({ where: { id }, data: dto });
+    await this.invalidateCache();
+    return result;
+  }
+
+  async removeByKey(key: string) {
+    const { count } = await this.prisma.i18nEntry.deleteMany({ where: { key } });
+    if (!count) throw new NotFoundException(`Key "${key}" not found`);
+    await this.invalidateCache();
+    return { deleted: count };
+  }
+
+  async remove(id: string) {
+    const entry = await this.prisma.i18nEntry.findUnique({ where: { id } });
+    if (!entry) throw new NotFoundException(`Entry ${id} not found`);
+    await this.prisma.i18nEntry.delete({ where: { id } });
+    await this.invalidateCache();
+    return entry;
+  }
+
+  private async invalidateCache() {
+    await this.redis.del(CACHE_KEY);
   }
 }

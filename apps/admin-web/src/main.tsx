@@ -31,10 +31,13 @@ function Root() {
         components: {
           Layout: { siderBg: '#ffffff' },
           Menu: {
-            // 选中项：浅黄底 + 深色文字/图标（黄字在浅底不可读）
             itemSelectedColor: 'rgba(0, 0, 0, 0.88)',
             itemSelectedBg: '#fff7cc',
             itemActiveBg: '#fffbe6',
+          },
+          Tooltip: {
+            colorBgSpotlight: 'rgba(0, 0, 0, 0.85)',
+            colorTextLightSolid: '#ffffff',
           },
         },
       }}

@@ -145,7 +145,12 @@
     "language": "语言",
     "value": "翻译文本",
     "filterLanguage": "筛选语言",
-    "notImplemented": "该功能暂未实现"
+    "notImplemented": "该功能暂未实现",
+    "createEntry": "新建翻译",
+    "editEntry": "编辑翻译",
+    "keyRequired": "请输入翻译 Key",
+    "valuePlaceholder": "请输入 {{lang}} 翻译文本",
+    "atLeastOneLang": "至少填写一种语言的翻译"
   },
   "jobs": {
     "title": "任务队列",

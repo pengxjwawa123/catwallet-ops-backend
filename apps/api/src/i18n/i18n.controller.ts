@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { I18nService } from './i18n.service';
-import { I18nConfigRequestDto, CreateI18nEntryDto, UpdateI18nEntryDto } from './dto/i18n.dto';
+import { I18nConfigRequestDto, CreateI18nEntryDto, UpdateI18nEntryDto, UpsertI18nKeyDto } from './dto/i18n.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Public } from '../auth/decorators/public.decorator';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
@@ -30,24 +30,41 @@ export class I18nController {
   @Get()
   @ApiBearerAuth()
   @RequirePermission('i18n:read')
-  @ApiOperation({ summary: 'List i18n entries (reserved)' })
-  findAll(@Query() _pagination: PaginationDto) {
-    return this.i18nService.findAll();
+  @ApiOperation({ summary: 'List i18n entries with pagination' })
+  findAll(@Query() pagination: PaginationDto) {
+    return this.i18nService.findAll(pagination.page, pagination.pageSize);
+  }
+
+  @Get('key/:key')
+  @ApiBearerAuth()
+  @RequirePermission('i18n:read')
+  @ApiOperation({ summary: 'Get all translations for a key' })
+  @ApiParam({ name: 'key', type: String })
+  findByKey(@Param('key') key: string) {
+    return this.i18nService.findByKey(key);
   }
 
   @Get(':id')
   @ApiBearerAuth()
   @RequirePermission('i18n:read')
-  @ApiOperation({ summary: 'Get i18n entry by ID (reserved)' })
+  @ApiOperation({ summary: 'Get i18n entry by ID' })
   @ApiParam({ name: 'id', type: String })
   findOne(@Param('id') id: string) {
     return this.i18nService.findOne(id);
   }
 
+  @Post('key')
+  @ApiBearerAuth()
+  @RequirePermission('i18n:manage')
+  @ApiOperation({ summary: 'Create or update a key with all language translations' })
+  upsertKey(@Body() dto: UpsertI18nKeyDto) {
+    return this.i18nService.upsertKey(dto);
+  }
+
   @Post()
   @ApiBearerAuth()
   @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Create i18n entry (reserved)' })
+  @ApiOperation({ summary: 'Create single i18n entry' })
   create(@Body() dto: CreateI18nEntryDto) {
     return this.i18nService.create(dto);
   }
@@ -55,16 +72,25 @@ export class I18nController {
   @Put(':id')
   @ApiBearerAuth()
   @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Update i18n entry (reserved)' })
+  @ApiOperation({ summary: 'Update i18n entry by ID' })
   @ApiParam({ name: 'id', type: String })
   update(@Param('id') id: string, @Body() dto: UpdateI18nEntryDto) {
     return this.i18nService.update(id, dto);
   }
 
+  @Delete('key/:key')
+  @ApiBearerAuth()
+  @RequirePermission('i18n:manage')
+  @ApiOperation({ summary: 'Delete all translations for a key' })
+  @ApiParam({ name: 'key', type: String })
+  removeByKey(@Param('key') key: string) {
+    return this.i18nService.removeByKey(key);
+  }
+
   @Delete(':id')
   @ApiBearerAuth()
   @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Delete i18n entry (reserved)' })
+  @ApiOperation({ summary: 'Delete i18n entry by ID' })
   @ApiParam({ name: 'id', type: String })
   remove(@Param('id') id: string) {
     return this.i18nService.remove(id);

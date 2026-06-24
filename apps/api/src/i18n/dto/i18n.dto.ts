@@ -1,4 +1,4 @@
-import { IsOptional, IsString, IsNotEmpty } from 'class-validator';
+import { IsOptional, IsString, IsNotEmpty, IsObject } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 export class I18nConfigRequestDto {
@@ -30,4 +30,18 @@ export class UpdateI18nEntryDto {
   @IsOptional()
   @IsString()
   value?: string;
+}
+
+export class UpsertI18nKeyDto {
+  @ApiProperty({ example: 'cancel', description: 'Translation key' })
+  @IsString()
+  @IsNotEmpty()
+  key: string;
+
+  @ApiProperty({
+    example: { en: 'Cancel', zh: '取消' },
+    description: 'Language → value map',
+  })
+  @IsObject()
+  translations: Record<string, string>;
 }
