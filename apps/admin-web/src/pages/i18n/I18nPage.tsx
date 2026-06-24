@@ -151,7 +151,15 @@ export default function I18nPage() {
       message.warning(t('i18n.atLeastOneLang'));
       return;
     }
-    // TODO: call real API when backend is ready
+    // TODO: call real upsert API when backend is ready
+    try {
+      await i18nApi.createOpLog({
+        action: editingKey ? 'update' : 'create',
+        operator: 'admin',
+        key: values.key,
+        detail: { translations },
+      });
+    } catch { /* non-critical */ }
     message.success(t('common.success'));
     setModalOpen(false);
     logActionRef.current?.reload();
@@ -202,8 +210,15 @@ export default function I18nPage() {
     return false;
   };
 
-  const handleImportConfirm = () => {
+  const handleImportConfirm = async () => {
     // TODO: call real batch import API when backend is ready
+    try {
+      await i18nApi.createOpLog({
+        action: 'batch_import',
+        operator: 'admin',
+        detail: { count: importData.length, keys: importData.slice(0, 20).map((r) => r.key) },
+      });
+    } catch { /* non-critical */ }
     message.success(t('i18n.importSuccess', { count: importData.length }));
     setImportModalOpen(false);
     setImportData([]);
