@@ -1,55 +1,39 @@
 import {
+  BadGatewayException,
   Injectable,
+  InternalServerErrorException,
   Logger,
-  NotFoundException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { createHmac } from 'crypto';
 import { RedisService } from '../common/redis/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { UpsertI18nKeyDto } from './dto/i18n.dto';
 
-const CACHE_KEY = 'i18n:config';
-const CACHE_TTL = 300;
+const LIST_CACHE_KEY = 'i18n:config:list';
+const LIST_CACHE_TTL = 60;
 
-function sortedRepresentation(value: unknown): string {
-  if (value === null || value === undefined) return '';
-  if (typeof value === 'object' && !Array.isArray(value)) {
-    const obj = value as Record<string, unknown>;
-    return Object.keys(obj)
-      .sort()
-      .map((key) => {
-        const v = obj[key];
-        if (!v) return null;
-        return `${key}=${sortedRepresentation(v)}`;
-      })
-      .filter((item): item is string => item !== null)
-      .join('&');
-  }
-  if (Array.isArray(value)) {
-    return value.map((item) => sortedRepresentation(item)).join(',');
-  }
-  return String(value);
+/** A single translation record as returned by the CatWallet i18n API. */
+export interface I18nConfigItem {
+  id: number;
+  platformSource: string;
+  configKey: string;
+  lang: string;
+  value: string;
+  version: number;
+  createTime: string;
+  updateTime: string;
 }
 
-function generateSignature(
-  params: Record<string, unknown>,
-  secretKey: string,
-): string {
-  const filtered = { ...params };
-  delete filtered.signature;
-  const queryString = sortedRepresentation(filtered);
-  const hmac = createHmac('sha256', secretKey);
-  hmac.update(queryString);
-  return hmac.digest('base64');
+interface CatWalletEnvelope<T> {
+  code?: string;
+  msg?: string;
+  data?: T;
 }
 
 @Injectable()
 export class I18nService {
   private readonly logger = new Logger(I18nService.name);
   private readonly apiBaseUrl: string;
-  private readonly apiKey: string;
-  private readonly apiSecretKey: string;
+  private readonly apiToken: string;
 
   constructor(
     private readonly redis: RedisService,
@@ -57,129 +41,122 @@ export class I18nService {
     private readonly prisma: PrismaService,
   ) {
     this.apiBaseUrl = this.config.get<string>('CATWALLET_API_BASE_URL') || '';
-    this.apiKey = this.config.get<string>('CATWALLET_API_KEY') || '';
-    this.apiSecretKey = this.config.get<string>('CATWALLET_API_SECRET_KEY') || '';
+    this.apiToken = this.config.get<string>('CATWALLET_API_TOKEN') || '';
   }
 
-  async getConfig(language?: string) {
-    const cacheKey = language ? `${CACHE_KEY}:${language}` : CACHE_KEY;
-    const cached = await this.redis.get(cacheKey);
-    if (cached) return JSON.parse(cached);
-
-    let url: string;
+  private buildUrl(path: string): string {
     try {
-      url = new URL('/gt/wallet/api/discover/i18n/config', this.apiBaseUrl).toString();
+      return new URL(path, this.apiBaseUrl).toString();
     } catch {
       this.logger.error('CATWALLET_API_BASE_URL must be an absolute URL');
-      return { langs: {} };
+      throw new InternalServerErrorException('CatWallet API base URL is not configured');
     }
+  }
 
-    const timestamp = Date.now().toString();
-    const body: Record<string, unknown> = { timestamp };
-    if (language) body.language = language;
+  private authHeaders(): Record<string, string> {
+    return { Authorization: `Bearer ${this.apiToken}` };
+  }
 
-    const signature = generateSignature(body, this.apiSecretKey);
+  /**
+   * Parse a CatWallet response, unwrapping the { code, msg, data } envelope.
+   * Treats a missing code or code === '200' as success.
+   */
+  private async parseEnvelope<T>(response: Response, context: string): Promise<T> {
+    if (!response.ok) {
+      this.logger.error(`${context} failed: ${response.status} ${response.statusText}`);
+      throw new BadGatewayException(`CatWallet API ${context} failed (${response.status})`);
+    }
+    const json = (await response.json()) as CatWalletEnvelope<T>;
+    if (json?.code && json.code !== '200') {
+      this.logger.error(`${context} error: ${json.code} - ${json.msg}`);
+      throw new BadGatewayException(`CatWallet API error: ${json.msg || json.code}`);
+    }
+    return (json?.data ?? json) as T;
+  }
 
-    const response = await fetch(url, {
+  /** Fetch the full translation list (cached briefly in Redis). */
+  async list(): Promise<I18nConfigItem[]> {
+    const cached = await this.redis.get(LIST_CACHE_KEY);
+    if (cached) return JSON.parse(cached) as I18nConfigItem[];
+
+    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/list'), {
+      method: 'POST',
+      headers: { Accept: 'application/json', ...this.authHeaders() },
+    });
+    const data = (await this.parseEnvelope<I18nConfigItem[]>(response, 'list')) ?? [];
+    await this.redis.set(LIST_CACHE_KEY, JSON.stringify(data), LIST_CACHE_TTL);
+    return data;
+  }
+
+  /** Search translations by keyword (matches key or value). */
+  async search(keyword: string): Promise<I18nConfigItem[]> {
+    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/search'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json',
-        'x-api-key': this.apiKey,
-        'X-Signature': signature,
-        'X-Timestamp': timestamp,
-        'X-Platform': 'extension',
+        Accept: 'application/json',
+        ...this.authHeaders(),
       },
-      body: JSON.stringify(body),
+      body: JSON.stringify({ keyword }),
     });
-
-    if (!response.ok) {
-      this.logger.error(`Failed to fetch i18n config: ${response.status} ${response.statusText}`);
-      return { langs: {} };
-    }
-
-    const json = await response.json();
-    if (json?.code && json.code !== '200') {
-      this.logger.error(`Plugin API error: ${json.code} - ${json.message}`);
-      return { langs: {} };
-    }
-
-    const result = json?.data ?? json;
-    await this.redis.set(cacheKey, JSON.stringify(result), CACHE_TTL);
-    return result;
+    return (await this.parseEnvelope<I18nConfigItem[]>(response, 'search')) ?? [];
   }
 
-  async findAll(page = 1, pageSize = 50) {
-    const [items, total] = await Promise.all([
-      this.prisma.i18nEntry.findMany({
-        skip: (page - 1) * pageSize,
-        take: pageSize,
-        orderBy: [{ key: 'asc' }, { language: 'asc' }],
-      }),
-      this.prisma.i18nEntry.count(),
-    ]);
-    return { items, total, page, pageSize, totalPages: Math.ceil(total / pageSize) };
-  }
-
-  async findByKey(key: string) {
-    const entries = await this.prisma.i18nEntry.findMany({ where: { key } });
-    if (!entries.length) throw new NotFoundException(`Key "${key}" not found`);
-    const translations: Record<string, string> = {};
-    for (const e of entries) translations[e.language] = e.value;
-    return { key, translations, entries };
-  }
-
-  async findOne(id: string) {
-    const entry = await this.prisma.i18nEntry.findUnique({ where: { id } });
-    if (!entry) throw new NotFoundException(`Entry ${id} not found`);
-    return entry;
-  }
-
-  async upsertKey(dto: UpsertI18nKeyDto) {
-    const ops = Object.entries(dto.translations).map(([language, value]) =>
-      this.prisma.i18nEntry.upsert({
-        where: { key_language: { key: dto.key, language } },
-        create: { key: dto.key, language, value },
-        update: { value },
-      }),
-    );
-    const results = await this.prisma.$transaction(ops);
-    await this.invalidateCache();
-    return results;
-  }
-
-  async create(dto: { key: string; language: string; value: string }) {
-    const result = await this.prisma.i18nEntry.create({ data: dto });
+  /** Add a new key with its zh / en translations. */
+  async add(configKey: string, zh: string, en: string) {
+    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/add'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...this.authHeaders(),
+      },
+      body: JSON.stringify({ configKey, zh, en }),
+    });
+    const result = await this.parseEnvelope<unknown>(response, 'add');
     await this.invalidateCache();
     return result;
   }
 
-  async update(id: string, dto: { value?: string }) {
-    const entry = await this.prisma.i18nEntry.findUnique({ where: { id } });
-    if (!entry) throw new NotFoundException(`Entry ${id} not found`);
-    const result = await this.prisma.i18nEntry.update({ where: { id }, data: dto });
+  /** Update the value of an existing translation entry. */
+  async update(configKey: string, id: string, value: string) {
+    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/update'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Accept: 'application/json',
+        ...this.authHeaders(),
+      },
+      body: JSON.stringify({ configKey, id, value }),
+    });
+    const result = await this.parseEnvelope<unknown>(response, 'update');
     await this.invalidateCache();
     return result;
   }
 
-  async removeByKey(key: string) {
-    const { count } = await this.prisma.i18nEntry.deleteMany({ where: { key } });
-    if (!count) throw new NotFoundException(`Key "${key}" not found`);
-    await this.invalidateCache();
-    return { deleted: count };
-  }
+  /** Forward an uploaded spreadsheet to the CatWallet batch-import endpoint. */
+  async batchImport(file: { buffer: Buffer; originalname: string; mimetype: string }) {
+    const form = new FormData();
+    const blob = new Blob([new Uint8Array(file.buffer)], {
+      type: file.mimetype || 'application/octet-stream',
+    });
+    form.append('file', blob, file.originalname);
 
-  async remove(id: string) {
-    const entry = await this.prisma.i18nEntry.findUnique({ where: { id } });
-    if (!entry) throw new NotFoundException(`Entry ${id} not found`);
-    await this.prisma.i18nEntry.delete({ where: { id } });
+    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/batch/add'), {
+      method: 'POST',
+      headers: { Accept: 'application/json', ...this.authHeaders() },
+      body: form,
+    });
+    const result = await this.parseEnvelope<unknown>(response, 'batch import');
     await this.invalidateCache();
-    return entry;
+    return result;
   }
 
   private async invalidateCache() {
-    await this.redis.del(CACHE_KEY);
+    await this.redis.del(LIST_CACHE_KEY);
   }
+
+  // ── Operation logs (local audit trail) ───────────────────────────────────────
 
   async writeOpLog(action: string, operator: string | null, key: string | null, detail?: unknown) {
     return this.prisma.i18nOpLog.create({
@@ -187,7 +164,7 @@ export class I18nService {
         action,
         operator,
         key,
-        detail: detail as any ?? undefined,
+        detail: (detail as any) ?? undefined,
       },
     });
   }

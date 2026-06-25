@@ -1,68 +1,24 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { Button, message, Input, Modal, Form, Upload, Table, Alert, Tabs, Typography } from 'antd';
-import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
+import { PlusOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { i18nApi } from '@/api';
-import type { I18nConfigResponse, I18nOpLog } from '@/utils/types';
+import type { I18nConfigItem, I18nOpLog } from '@/utils/types';
 import dayjs from 'dayjs';
 
 const { Paragraph } = Typography;
 
-function parseCsv(text: string): string[][] {
-  const rows: string[][] = [];
-  let current = '';
-  let inQuotes = false;
-  let row: string[] = [];
-
-  for (let i = 0; i < text.length; i++) {
-    const ch = text[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (text[i + 1] === '"') {
-          current += '"';
-          i++;
-        } else {
-          inQuotes = false;
-        }
-      } else {
-        current += ch;
-      }
-    } else {
-      if (ch === '"') {
-        inQuotes = true;
-      } else if (ch === ',') {
-        row.push(current);
-        current = '';
-      } else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
-        row.push(current);
-        current = '';
-        rows.push(row);
-        row = [];
-        if (ch === '\r') i++;
-      } else {
-        current += ch;
-      }
-    }
-  }
-  if (current || row.length) {
-    row.push(current);
-    rows.push(row);
-  }
-  return rows;
-}
-
-function escapeCsvField(value: string): string {
-  if (value.includes(',') || value.includes('"') || value.includes('\n')) {
-    return `"${value.replace(/"/g, '""')}"`;
-  }
-  return value;
+interface I18nCell {
+  id: number;
+  value: string;
 }
 
 interface I18nRow {
-  key: string;
-  [lang: string]: string;
+  configKey: string;
+  // per-language cell keyed by lang code, e.g. zh / en
+  [lang: string]: I18nCell | string;
 }
 
 export default function I18nPage() {
@@ -70,20 +26,23 @@ export default function I18nPage() {
   const actionRef = useRef<ActionType>();
   const logActionRef = useRef<ActionType>();
   const [form] = Form.useForm();
-  const [configData, setConfigData] = useState<I18nConfigResponse | null>(null);
+  const [items, setItems] = useState<I18nConfigItem[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchKey, setSearchKey] = useState('');
+  const [searching, setSearching] = useState(false);
   const [modalOpen, setModalOpen] = useState(false);
-  const [editingKey, setEditingKey] = useState<string | null>(null);
-  const [importModalOpen, setImportModalOpen] = useState(false);
-  const [importData, setImportData] = useState<I18nRow[]>([]);
+  const [editingRow, setEditingRow] = useState<I18nRow | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [importing, setImporting] = useState(false);
   const [logDetail, setLogDetail] = useState<I18nOpLog | null>(null);
 
-  const fetchConfig = async () => {
+  const fetchList = async () => {
     setLoading(true);
+    setSearching(false);
+    setSearchKey('');
     try {
-      const data = await i18nApi.getConfig();
-      setConfigData(data);
+      const data = await i18nApi.list();
+      setItems(data ?? []);
     } catch {
       /* interceptor shows error */
     } finally {
@@ -92,49 +51,69 @@ export default function I18nPage() {
   };
 
   useEffect(() => {
-    fetchConfig();
+    fetchList();
   }, []);
 
-  const languages = useMemo(() => {
-    if (!configData?.langs) return [];
-    return Object.keys(configData.langs).sort();
-  }, [configData]);
-
-  const allRows: I18nRow[] = useMemo(() => {
-    if (!configData?.langs) return [];
-    const map: Record<string, I18nRow> = {};
-    for (const [lang, entries] of Object.entries(configData.langs)) {
-      for (const [key, value] of Object.entries(entries)) {
-        if (!map[key]) map[key] = { key };
-        map[key][lang] = value;
-      }
+  const handleSearch = async (keyword: string) => {
+    const kw = keyword.trim();
+    if (!kw) {
+      fetchList();
+      return;
     }
-    return Object.values(map).sort((a, b) => a.key.localeCompare(b.key));
-  }, [configData]);
+    setLoading(true);
+    setSearching(true);
+    setSearchKey(kw);
+    try {
+      const data = await i18nApi.search(kw);
+      setItems(data ?? []);
+    } catch {
+      /* interceptor shows error */
+    } finally {
+      setLoading(false);
+    }
+  };
 
-  const filteredRows = useMemo(() => {
-    if (!searchKey) return allRows;
-    const lower = searchKey.toLowerCase();
-    return allRows.filter((row) => {
-      if (row.key.toLowerCase().includes(lower)) return true;
-      for (const lang of languages) {
-        if (row[lang]?.toLowerCase().includes(lower)) return true;
+  const languages = useMemo(() => {
+    const set = new Set<string>();
+    for (const item of items) set.add(item.lang);
+    const langs = Array.from(set);
+    // keep a stable, conventional order: zh, en, then the rest alphabetically
+    const priority = ['zh', 'en'];
+    return langs.sort((a, b) => {
+      const ia = priority.indexOf(a);
+      const ib = priority.indexOf(b);
+      if (ia !== -1 || ib !== -1) {
+        return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
       }
-      return false;
+      return a.localeCompare(b);
     });
-  }, [allRows, searchKey, languages]);
+  }, [items]);
+
+  const rows: I18nRow[] = useMemo(() => {
+    const map: Record<string, I18nRow> = {};
+    for (const item of items) {
+      if (!map[item.configKey]) map[item.configKey] = { configKey: item.configKey };
+      map[item.configKey][item.lang] = { id: item.id, value: item.value };
+    }
+    return Object.values(map).sort((a, b) => a.configKey.localeCompare(b.configKey));
+  }, [items]);
+
+  const getCell = (row: I18nRow, lang: string): I18nCell | undefined => {
+    const cell = row[lang];
+    return typeof cell === 'object' ? cell : undefined;
+  };
 
   const openCreate = () => {
-    setEditingKey(null);
+    setEditingRow(null);
     form.resetFields();
     setModalOpen(true);
   };
 
   const openEdit = (record: I18nRow) => {
-    setEditingKey(record.key);
-    const values: Record<string, string> = { key: record.key };
+    setEditingRow(record);
+    const values: Record<string, string> = { configKey: record.configKey };
     for (const lang of languages) {
-      values[`lang_${lang}`] = record[lang] || '';
+      values[`lang_${lang}`] = getCell(record, lang)?.value ?? '';
     }
     form.setFieldsValue(values);
     setModalOpen(true);
@@ -142,118 +121,85 @@ export default function I18nPage() {
 
   const handleSubmit = async () => {
     const values = await form.validateFields();
-    const translations: Record<string, string> = {};
-    for (const lang of languages) {
-      const val = values[`lang_${lang}`];
-      if (val) translations[lang] = val;
-    }
-    if (!Object.keys(translations).length) {
-      message.warning(t('i18n.atLeastOneLang'));
-      return;
-    }
-    // TODO: call real upsert API when backend is ready
+    setSubmitting(true);
     try {
-      await i18nApi.createOpLog({
-        action: editingKey ? 'update' : 'create',
-        operator: 'admin',
-        key: values.key,
-        detail: { translations },
-      });
-    } catch { /* non-critical */ }
-    message.success(t('common.success'));
-    setModalOpen(false);
-    logActionRef.current?.reload();
-  };
-
-  const handleImportFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const csvRows = parseCsv(text);
-        if (csvRows.length < 2) {
-          message.error(t('i18n.importParseError'));
-          return;
-        }
-        const header = csvRows[0].map((h) => h.trim().toLowerCase());
-        const keyIdx = header.indexOf('key');
-        if (keyIdx === -1) {
-          message.error(t('i18n.importMissingKey'));
-          return;
-        }
-        const langIndices: { lang: string; idx: number }[] = [];
-        for (let i = 0; i < header.length; i++) {
-          if (i !== keyIdx && header[i]) {
-            langIndices.push({ lang: header[i], idx: i });
+      if (editingRow) {
+        // Update each changed language entry individually (API updates by id).
+        const updates: Promise<unknown>[] = [];
+        const changed: Record<string, string> = {};
+        for (const lang of languages) {
+          const cell = getCell(editingRow, lang);
+          const next = values[`lang_${lang}`] ?? '';
+          if (cell && next !== cell.value) {
+            updates.push(
+              i18nApi.update({ configKey: editingRow.configKey, id: String(cell.id), value: next }),
+            );
+            changed[lang] = next;
           }
         }
-        const rows: I18nRow[] = [];
-        for (let r = 1; r < csvRows.length; r++) {
-          const cells = csvRows[r];
-          const key = cells[keyIdx]?.trim();
-          if (!key) continue;
-          const row: I18nRow = { key };
-          for (const { lang, idx } of langIndices) {
-            const val = cells[idx]?.trim();
-            if (val) row[lang] = val;
-          }
-          rows.push(row);
+        if (!updates.length) {
+          message.info(t('i18n.noChanges'));
+          setModalOpen(false);
+          return;
         }
-        rows.sort((a, b) => a.key.localeCompare(b.key));
-        setImportData(rows);
-        setImportModalOpen(true);
-      } catch {
-        message.error(t('i18n.importParseError'));
+        await Promise.all(updates);
+        i18nApi
+          .createOpLog({ action: 'update', operator: 'admin', key: editingRow.configKey, detail: { changed } })
+          .catch(() => {});
+      } else {
+        await i18nApi.add({ configKey: values.configKey, zh: values.lang_zh, en: values.lang_en });
+        i18nApi
+          .createOpLog({
+            action: 'create',
+            operator: 'admin',
+            key: values.configKey,
+            detail: { zh: values.lang_zh, en: values.lang_en },
+          })
+          .catch(() => {});
       }
-    };
-    reader.readAsText(file);
-    return false;
+      message.success(t('common.success'));
+      setModalOpen(false);
+      if (searching && searchKey) {
+        handleSearch(searchKey);
+      } else {
+        fetchList();
+      }
+      logActionRef.current?.reload();
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleImportConfirm = async () => {
-    // TODO: call real batch import API when backend is ready
+  const handleImportFile = async (file: File) => {
+    setImporting(true);
     try {
-      await i18nApi.createOpLog({
-        action: 'batch_import',
-        operator: 'admin',
-        detail: { count: importData.length, keys: importData.slice(0, 20).map((r) => r.key) },
-      });
-    } catch { /* non-critical */ }
-    message.success(t('i18n.importSuccess', { count: importData.length }));
-    setImportModalOpen(false);
-    setImportData([]);
-    logActionRef.current?.reload();
-  };
-
-  const handleDownloadTemplate = () => {
-    const langs = languages.length ? languages : ['en', 'zh'];
-    const header = ['key', ...langs].map(escapeCsvField).join(',');
-    const example = [
-      ['common.confirm', ...langs.map((l) => l === 'zh' ? '确认' : 'Confirm')],
-      ['common.cancel', ...langs.map((l) => l === 'zh' ? '取消' : 'Cancel')],
-    ].map((row) => row.map(escapeCsvField).join(','));
-    const csv = [header, ...example].join('\n');
-    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'i18n_import_template.csv';
-    a.click();
-    URL.revokeObjectURL(url);
+      await i18nApi.batchImport(file);
+      i18nApi
+        .createOpLog({ action: 'batch_import', operator: 'admin', detail: { fileName: file.name } })
+        .catch(() => {});
+      message.success(t('i18n.importSuccess'));
+      fetchList();
+      logActionRef.current?.reload();
+    } catch {
+      /* interceptor shows error */
+    } finally {
+      setImporting(false);
+    }
+    return false;
   };
 
   const columns: ProColumns<I18nRow>[] = useMemo(() => {
     const cols: ProColumns<I18nRow>[] = [
       {
         title: t('i18n.key'),
-        dataIndex: 'key',
+        dataIndex: 'configKey',
         copyable: true,
-        width: 220,
+        width: 260,
       },
       ...languages.map((lang) => ({
         title: lang.toUpperCase(),
-        dataIndex: lang,
         ellipsis: true,
+        render: (_: unknown, record: I18nRow) => getCell(record, lang)?.value ?? '-',
       })),
       {
         title: t('common.actions'),
@@ -267,6 +213,7 @@ export default function I18nPage() {
       },
     ];
     return cols;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [languages, t]);
 
   const logColumns: ProColumns<I18nOpLog>[] = [
@@ -291,6 +238,9 @@ export default function I18nPage() {
     },
   ];
 
+  // For create, the add API requires zh + en; for edit, show whatever languages exist.
+  const formLangs = editingRow ? languages : ['zh', 'en'];
+
   return (
     <>
       <Tabs
@@ -303,41 +253,34 @@ export default function I18nPage() {
               <ProTable<I18nRow>
                 headerTitle={t('i18n.title')}
                 actionRef={actionRef}
-                rowKey="key"
+                rowKey="configKey"
                 loading={loading}
                 search={false}
-                dataSource={filteredRows}
+                dataSource={rows}
                 scroll={{ x: undefined }}
                 toolBarRender={() => [
                   <Input.Search
                     key="search"
                     placeholder={t('common.search')}
                     allowClear
-                    style={{ width: 240 }}
-                    onSearch={(val) => setSearchKey(val)}
-                    onChange={(e) => { if (!e.target.value) setSearchKey(''); }}
+                    style={{ width: 280 }}
+                    onSearch={handleSearch}
+                    onChange={(e) => { if (!e.target.value && searching) fetchList(); }}
                   />,
                   <Button
                     key="reload"
                     icon={<ReloadOutlined />}
-                    onClick={fetchConfig}
+                    onClick={fetchList}
                   >
                     {t('common.reset')}
                   </Button>,
-                  <Button
-                    key="template"
-                    icon={<DownloadOutlined />}
-                    onClick={handleDownloadTemplate}
-                  >
-                    {t('i18n.downloadTemplate')}
-                  </Button>,
                   <Upload
                     key="import"
-                    accept=".csv"
+                    accept=".xlsx,.xls"
                     showUploadList={false}
                     beforeUpload={handleImportFile}
                   >
-                    <Button icon={<UploadOutlined />}>
+                    <Button icon={<UploadOutlined />} loading={importing}>
                       {t('i18n.import')}
                     </Button>
                   </Upload>,
@@ -382,67 +325,33 @@ export default function I18nPage() {
       />
 
       <Modal
-        title={editingKey ? t('i18n.editEntry') : t('i18n.createEntry')}
+        title={editingRow ? t('i18n.editEntry') : t('i18n.createEntry')}
         open={modalOpen}
         onOk={handleSubmit}
         onCancel={() => setModalOpen(false)}
+        confirmLoading={submitting}
         destroyOnClose
         width={600}
       >
         <Form form={form} layout="vertical">
           <Form.Item
-            name="key"
+            name="configKey"
             label={t('i18n.key')}
             rules={[{ required: true, message: t('i18n.keyRequired') }]}
           >
-            <Input disabled={!!editingKey} placeholder="e.g. common.cancel" />
+            <Input disabled={!!editingRow} placeholder="e.g. common.cancel" />
           </Form.Item>
-          {languages.map((lang) => (
+          {formLangs.map((lang) => (
             <Form.Item
               key={lang}
               name={`lang_${lang}`}
               label={lang.toUpperCase()}
+              rules={editingRow ? [] : [{ required: true, message: t('i18n.valueRequired') }]}
             >
               <Input.TextArea rows={2} placeholder={t('i18n.valuePlaceholder', { lang: lang.toUpperCase() })} />
             </Form.Item>
           ))}
         </Form>
-      </Modal>
-
-      <Modal
-        title={t('i18n.importPreview')}
-        open={importModalOpen}
-        onOk={handleImportConfirm}
-        onCancel={() => { setImportModalOpen(false); setImportData([]); }}
-        width={800}
-        okText={t('i18n.confirmImport')}
-      >
-        <Alert
-          type="info"
-          showIcon
-          message={t('i18n.importPreviewTip', { count: importData.length })}
-          style={{ marginBottom: 16 }}
-        />
-        <Table
-          dataSource={importData.slice(0, 100)}
-          rowKey="key"
-          size="small"
-          scroll={{ y: 400 }}
-          pagination={false}
-          columns={[
-            { title: 'Key', dataIndex: 'key', width: 200, ellipsis: true },
-            ...languages.map((lang) => ({
-              title: lang.toUpperCase(),
-              dataIndex: lang,
-              ellipsis: true,
-            })),
-          ]}
-        />
-        {importData.length > 100 && (
-          <div style={{ marginTop: 8, color: '#999' }}>
-            {t('i18n.importShowingPartial', { shown: 100, total: importData.length })}
-          </div>
-        )}
       </Modal>
 
       <Modal

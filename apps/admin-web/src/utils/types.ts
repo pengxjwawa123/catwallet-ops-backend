@@ -109,17 +109,15 @@ export interface Announcement {
 }
 
 // I18n
-export interface I18nEntry {
-  id: string;
-  key: string;
-  language: string;
+export interface I18nConfigItem {
+  id: number;
+  platformSource: string;
+  configKey: string;
+  lang: string;
   value: string;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface I18nConfigResponse {
-  langs: Record<string, Record<string, string>>;
+  version: number;
+  createTime: string;
+  updateTime: string;
 }
 
 export interface I18nOpLog {

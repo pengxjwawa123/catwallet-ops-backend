@@ -3,109 +3,83 @@ import {
   Get,
   Post,
   Put,
-  Delete,
   Body,
-  Param,
   Query,
+  UploadedFile,
+  UseInterceptors,
+  BadRequestException,
 } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { I18nService } from './i18n.service';
-import { I18nConfigRequestDto, CreateI18nEntryDto, UpdateI18nEntryDto, UpsertI18nKeyDto, I18nOpLogQueryDto, CreateI18nOpLogDto } from './dto/i18n.dto';
-import { PaginationDto } from '../common/dto/pagination.dto';
-import { Public } from '../auth/decorators/public.decorator';
+import { AddI18nDto, UpdateI18nDto, SearchI18nDto, I18nOpLogQueryDto, CreateI18nOpLogDto } from './dto/i18n.dto';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 
+/** Minimal shape of a multer-parsed upload (avoids depending on @types/multer). */
+interface UploadedFileLike {
+  buffer: Buffer;
+  originalname: string;
+  mimetype: string;
+}
+
 @ApiTags('I18n')
+@ApiBearerAuth()
 @Controller('i18n')
 export class I18nController {
   constructor(private readonly i18nService: I18nService) {}
 
-  @Post('config')
-  @Public()
-  @ApiOperation({ summary: 'Get all i18n translations (public, proxied from plugin API)' })
-  getConfig(@Body() dto: I18nConfigRequestDto) {
-    return this.i18nService.getConfig(dto.language);
+  @Get()
+  @RequirePermission('i18n:read')
+  @ApiOperation({ summary: 'List all i18n translations (proxied from CatWallet)' })
+  list() {
+    return this.i18nService.list();
   }
 
-  @Get()
-  @ApiBearerAuth()
+  @Post('search')
   @RequirePermission('i18n:read')
-  @ApiOperation({ summary: 'List i18n entries with pagination' })
-  findAll(@Query() pagination: PaginationDto) {
-    return this.i18nService.findAll(pagination.page, pagination.pageSize);
+  @ApiOperation({ summary: 'Search i18n translations by keyword' })
+  search(@Body() dto: SearchI18nDto) {
+    return this.i18nService.search(dto.keyword);
+  }
+
+  @Post()
+  @RequirePermission('i18n:manage')
+  @ApiOperation({ summary: 'Add a new translation key with zh / en values' })
+  add(@Body() dto: AddI18nDto) {
+    return this.i18nService.add(dto.configKey, dto.zh, dto.en);
+  }
+
+  @Put()
+  @RequirePermission('i18n:manage')
+  @ApiOperation({ summary: 'Update a translation entry value' })
+  update(@Body() dto: UpdateI18nDto) {
+    return this.i18nService.update(dto.configKey, dto.id, dto.value);
+  }
+
+  @Post('batch')
+  @RequirePermission('i18n:manage')
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @ApiOperation({ summary: 'Batch import translations from an uploaded spreadsheet' })
+  batchImport(@UploadedFile() file?: UploadedFileLike) {
+    if (!file) throw new BadRequestException('file is required');
+    return this.i18nService.batchImport(file);
   }
 
   @Get('op-logs')
-  @ApiBearerAuth()
   @RequirePermission('i18n:read')
   @ApiOperation({ summary: 'List i18n operation logs' })
   getOpLogs(@Query() query: I18nOpLogQueryDto) {
     return this.i18nService.getOpLogs(query.page, query.pageSize, query.action, query.key);
   }
 
-  @Get('key/:key')
-  @ApiBearerAuth()
-  @RequirePermission('i18n:read')
-  @ApiOperation({ summary: 'Get all translations for a key' })
-  @ApiParam({ name: 'key', type: String })
-  findByKey(@Param('key') key: string) {
-    return this.i18nService.findByKey(key);
-  }
-
-  @Get(':id')
-  @ApiBearerAuth()
-  @RequirePermission('i18n:read')
-  @ApiOperation({ summary: 'Get i18n entry by ID' })
-  @ApiParam({ name: 'id', type: String })
-  findOne(@Param('id') id: string) {
-    return this.i18nService.findOne(id);
-  }
-
-  @Post('key')
-  @ApiBearerAuth()
-  @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Create or update a key with all language translations' })
-  upsertKey(@Body() dto: UpsertI18nKeyDto) {
-    return this.i18nService.upsertKey(dto);
-  }
-
-  @Post()
-  @ApiBearerAuth()
-  @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Create single i18n entry' })
-  create(@Body() dto: CreateI18nEntryDto) {
-    return this.i18nService.create(dto);
-  }
-
-  @Put(':id')
-  @ApiBearerAuth()
-  @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Update i18n entry by ID' })
-  @ApiParam({ name: 'id', type: String })
-  update(@Param('id') id: string, @Body() dto: UpdateI18nEntryDto) {
-    return this.i18nService.update(id, dto);
-  }
-
-  @Delete('key/:key')
-  @ApiBearerAuth()
-  @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Delete all translations for a key' })
-  @ApiParam({ name: 'key', type: String })
-  removeByKey(@Param('key') key: string) {
-    return this.i18nService.removeByKey(key);
-  }
-
-  @Delete(':id')
-  @ApiBearerAuth()
-  @RequirePermission('i18n:manage')
-  @ApiOperation({ summary: 'Delete i18n entry by ID' })
-  @ApiParam({ name: 'id', type: String })
-  remove(@Param('id') id: string) {
-    return this.i18nService.remove(id);
-  }
-
   @Post('op-logs')
-  @ApiBearerAuth()
   @RequirePermission('i18n:manage')
   @ApiOperation({ summary: 'Create i18n operation log' })
   createOpLog(@Body() dto: CreateI18nOpLogDto) {
