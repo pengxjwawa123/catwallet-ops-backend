@@ -40,7 +40,9 @@ describe('RemoteConfigsService', () => {
     it('creates a config entry', async () => {
       mockPrisma.remoteConfig.findUnique.mockResolvedValue(null);
       mockPrisma.remoteConfig.create.mockResolvedValue({
-        id: 'r1', key: 'max-size', value: '10MB',
+        id: 'r1',
+        key: 'max-size',
+        value: '10MB',
       });
       const result = await service.create({ key: 'max-size', value: '10MB' });
       expect(result).toHaveProperty('key', 'max-size');

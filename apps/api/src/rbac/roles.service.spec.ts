@@ -31,7 +31,11 @@ const mockGuard = {
   invalidateUserCache: jest.fn(),
 };
 
-const superadminCaller: RequestUser = { userId: 'u-super', username: 'superadmin', roles: ['superadmin'] };
+const superadminCaller: RequestUser = {
+  userId: 'u-super',
+  username: 'superadmin',
+  roles: ['superadmin'],
+};
 const operatorCaller: RequestUser = { userId: 'u-op', username: 'operator', roles: ['operator'] };
 
 describe('RolesService', () => {
@@ -66,8 +70,17 @@ describe('RolesService', () => {
 
   describe('assignPermission', () => {
     it('upserts role permission and invalidates cache', async () => {
-      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r1', name: 'editor', rolePermissions: [], _count: { userRoles: 0 } });
-      mockPrisma.opsPermission.findUnique.mockResolvedValue({ id: 'p1', resource: 'audit', action: 'read' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
+      mockPrisma.opsPermission.findUnique.mockResolvedValue({
+        id: 'p1',
+        resource: 'audit',
+        action: 'read',
+      });
       mockPrisma.opsRolePermission.upsert.mockResolvedValue({});
       mockPrisma.opsUserRole.findMany.mockResolvedValue([]);
 
@@ -78,14 +91,30 @@ describe('RolesService', () => {
     });
 
     it('throws NotFoundException when permission not found', async () => {
-      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r1', name: 'editor', rolePermissions: [], _count: { userRoles: 0 } });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
       mockPrisma.opsPermission.findUnique.mockResolvedValue(null);
-      await expect(service.assignPermission('r1', { permissionId: 'bad' }, superadminCaller)).rejects.toThrow(NotFoundException);
+      await expect(
+        service.assignPermission('r1', { permissionId: 'bad' }, superadminCaller),
+      ).rejects.toThrow(NotFoundException);
     });
 
     it('throws ForbiddenException when non-superadmin tries to grant rbac:manage', async () => {
-      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r1', name: 'editor', rolePermissions: [], _count: { userRoles: 0 } });
-      mockPrisma.opsPermission.findUnique.mockResolvedValue({ id: 'p2', resource: 'rbac', action: 'manage' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
+      mockPrisma.opsPermission.findUnique.mockResolvedValue({
+        id: 'p2',
+        resource: 'rbac',
+        action: 'manage',
+      });
 
       await expect(
         service.assignPermission('r1', { permissionId: 'p2' }, operatorCaller),
@@ -93,8 +122,17 @@ describe('RolesService', () => {
     });
 
     it('allows superadmin to grant rbac:manage', async () => {
-      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r1', name: 'editor', rolePermissions: [], _count: { userRoles: 0 } });
-      mockPrisma.opsPermission.findUnique.mockResolvedValue({ id: 'p2', resource: 'rbac', action: 'manage' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
+      mockPrisma.opsPermission.findUnique.mockResolvedValue({
+        id: 'p2',
+        resource: 'rbac',
+        action: 'manage',
+      });
       mockPrisma.opsRolePermission.upsert.mockResolvedValue({});
       mockPrisma.opsUserRole.findMany.mockResolvedValue([]);
 

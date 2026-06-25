@@ -1,4 +1,11 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString, MinLength, validateSync } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsNumber,
+  IsOptional,
+  IsString,
+  MinLength,
+  validateSync,
+} from 'class-validator';
 import { plainToInstance, Type } from 'class-transformer';
 
 const KNOWN_WEAK_SECRETS = ['change-me-to-a-long-random-secret'];

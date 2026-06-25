@@ -1,8 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import {
-  NotFoundException,
-  BadRequestException,
-} from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { AnnouncementsService } from './announcements.service';
 import { PrismaService } from '../prisma/prisma.service';
 import { AnnouncementStatus } from '@prisma/client';
@@ -23,10 +20,7 @@ describe('AnnouncementsService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        AnnouncementsService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [AnnouncementsService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
     service = module.get<AnnouncementsService>(AnnouncementsService);
     jest.clearAllMocks();
@@ -35,7 +29,10 @@ describe('AnnouncementsService', () => {
   describe('create', () => {
     it('creates an announcement with DRAFT status', async () => {
       mockPrisma.announcement.create.mockResolvedValue({
-        id: 'a1', title: 'Test', content: 'Body', status: AnnouncementStatus.DRAFT,
+        id: 'a1',
+        title: 'Test',
+        content: 'Body',
+        status: AnnouncementStatus.DRAFT,
       });
       const result = await service.create({ title: 'Test', content: 'Body' });
       expect(result.status).toBe(AnnouncementStatus.DRAFT);
@@ -46,7 +43,11 @@ describe('AnnouncementsService', () => {
     it('returns paginated results filtered by status', async () => {
       mockPrisma.announcement.findMany.mockResolvedValue([]);
       mockPrisma.announcement.count.mockResolvedValue(0);
-      const result = await service.findAll({ status: AnnouncementStatus.PUBLISHED, page: 1, pageSize: 10 });
+      const result = await service.findAll({
+        status: AnnouncementStatus.PUBLISHED,
+        page: 1,
+        pageSize: 10,
+      });
       expect(result).toHaveProperty('items');
       expect(mockPrisma.announcement.findMany).toHaveBeenCalledWith(
         expect.objectContaining({ where: { status: AnnouncementStatus.PUBLISHED } }),
@@ -74,7 +75,8 @@ describe('AnnouncementsService', () => {
 
     it('throws BadRequestException when already published', async () => {
       mockPrisma.announcement.findUnique.mockResolvedValue({
-        id: 'a1', status: AnnouncementStatus.PUBLISHED,
+        id: 'a1',
+        status: AnnouncementStatus.PUBLISHED,
       });
       await expect(service.publish('a1')).rejects.toThrow(BadRequestException);
     });
@@ -88,10 +90,12 @@ describe('AnnouncementsService', () => {
   describe('unpublish', () => {
     it('transitions PUBLISHED → DRAFT', async () => {
       mockPrisma.announcement.findUnique.mockResolvedValue({
-        id: 'a1', status: AnnouncementStatus.PUBLISHED,
+        id: 'a1',
+        status: AnnouncementStatus.PUBLISHED,
       });
       mockPrisma.announcement.update.mockResolvedValue({
-        id: 'a1', status: AnnouncementStatus.DRAFT,
+        id: 'a1',
+        status: AnnouncementStatus.DRAFT,
       });
       const result = await service.unpublish('a1');
       expect(result.status).toBe(AnnouncementStatus.DRAFT);
@@ -99,7 +103,8 @@ describe('AnnouncementsService', () => {
 
     it('throws BadRequestException when not published', async () => {
       mockPrisma.announcement.findUnique.mockResolvedValue({
-        id: 'a1', status: AnnouncementStatus.DRAFT,
+        id: 'a1',
+        status: AnnouncementStatus.DRAFT,
       });
       await expect(service.unpublish('a1')).rejects.toThrow(BadRequestException);
     });

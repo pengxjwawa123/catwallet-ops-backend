@@ -37,7 +37,10 @@ export class UpdateI18nDto {
 }
 
 export class SearchI18nDto {
-  @ApiProperty({ example: 'Vote and Earn Rewards', description: 'Keyword to search by key or value' })
+  @ApiProperty({
+    example: 'Vote and Earn Rewards',
+    description: 'Keyword to search by key or value',
+  })
   @IsString()
   @IsNotEmpty()
   keyword: string;

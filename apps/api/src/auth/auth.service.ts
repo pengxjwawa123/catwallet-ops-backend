@@ -1,8 +1,4 @@
-import {
-  Injectable,
-  UnauthorizedException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, UnauthorizedException, Logger } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
@@ -31,7 +27,8 @@ export class AuthService {
     });
 
     // Always run argon2.verify to prevent timing oracle (dummy hash for unknown users)
-    const hashToCheck = user?.passwordHash ?? '$argon2id$v=19$m=65536,t=3,p=4$dummy$dummydummydummydummydummydummy';
+    const hashToCheck =
+      user?.passwordHash ?? '$argon2id$v=19$m=65536,t=3,p=4$dummy$dummydummydummydummydummydummy';
     const valid = await argon2.verify(hashToCheck, password);
 
     if (!user || !valid) {
@@ -141,7 +138,12 @@ export class AuthService {
     if (!user || !user.twoFASecret) {
       throw new UnauthorizedException('2FA not set up');
     }
-    const result = totpVerifySync({ token, secret: user.twoFASecret, strategy: 'totp', epochTolerance: 30 });
+    const result = totpVerifySync({
+      token,
+      secret: user.twoFASecret,
+      strategy: 'totp',
+      epochTolerance: 30,
+    });
     if (!result.valid) throw new UnauthorizedException('Invalid TOTP token');
 
     await this.prisma.opsUser.update({
@@ -159,7 +161,12 @@ export class AuthService {
     if (!user || !user.twoFASecret || !user.twoFAEnabled) {
       throw new UnauthorizedException('2FA not enabled for user');
     }
-    const result = totpVerifySync({ token, secret: user.twoFASecret, strategy: 'totp', epochTolerance: 30 });
+    const result = totpVerifySync({
+      token,
+      secret: user.twoFASecret,
+      strategy: 'totp',
+      epochTolerance: 30,
+    });
     if (!result.valid) throw new UnauthorizedException('Invalid TOTP token');
 
     return this.issueTokens(user, ip, userAgent);

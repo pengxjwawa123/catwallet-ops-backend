@@ -29,11 +29,15 @@ export class JobsService {
     });
 
     // Enqueue in BullMQ with the DB job id as the jobId for traceability
-    await this.queue.add(dto.name, { ...dto.payload, _jobId: job.id }, {
-      jobId: job.id,
-      attempts: 3,
-      backoff: { type: 'exponential', delay: 1000 },
-    });
+    await this.queue.add(
+      dto.name,
+      { ...dto.payload, _jobId: job.id },
+      {
+        jobId: job.id,
+        attempts: 3,
+        backoff: { type: 'exponential', delay: 1000 },
+      },
+    );
 
     this.logger.log(`Job enqueued: ${dto.name} (${job.id})`);
     return job;

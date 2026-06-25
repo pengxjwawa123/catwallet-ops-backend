@@ -1,20 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
-  Patch,
-  Body,
-  Param,
-  Query,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiParam,
-} from '@nestjs/swagger';
+import { Controller, Get, Post, Put, Delete, Patch, Body, Param, Query } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { OpsUsersService } from './ops-users.service';
 import {
   CreateOpsUserDto,
@@ -59,7 +44,11 @@ export class OpsUsersController {
   @RequirePermission('ops_user:update')
   @ApiOperation({ summary: 'Update ops user' })
   @ApiParam({ name: 'id', type: String })
-  update(@Param('id') id: string, @Body() dto: UpdateOpsUserDto, @CurrentUser() caller: RequestUser) {
+  update(
+    @Param('id') id: string,
+    @Body() dto: UpdateOpsUserDto,
+    @CurrentUser() caller: RequestUser,
+  ) {
     return this.opsUsersService.update(id, dto, caller);
   }
 

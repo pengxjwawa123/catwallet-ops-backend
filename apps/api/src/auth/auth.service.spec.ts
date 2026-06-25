@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { PrismaService } from '../prisma/prisma.service';
 import * as argon2 from 'argon2';
+import { verifySync } from 'otplib';
 
 // Mock argon2
 jest.mock('argon2', () => ({
@@ -95,9 +96,7 @@ describe('AuthService', () => {
     it('should throw UnauthorizedException for unknown user', async () => {
       mockPrisma.opsUser.findUnique.mockResolvedValue(null);
 
-      await expect(service.validateUser('ghost', 'pass')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.validateUser('ghost', 'pass')).rejects.toThrow(UnauthorizedException);
     });
 
     it('should throw UnauthorizedException for inactive user', async () => {
@@ -187,8 +186,7 @@ describe('AuthService', () => {
     });
 
     it('enable2FA should enable 2FA when TOTP valid', async () => {
-      const { verifySync } = require('otplib');
-      verifySync.mockReturnValue({ valid: true });
+      jest.mocked(verifySync).mockReturnValue({ valid: true } as never);
       mockPrisma.opsUser.findUnique.mockResolvedValue({
         ...mockUser,
         twoFASecret: 'TESTSECRET',
@@ -200,16 +198,13 @@ describe('AuthService', () => {
     });
 
     it('enable2FA should throw UnauthorizedException on invalid TOTP', async () => {
-      const { verifySync } = require('otplib');
-      verifySync.mockReturnValue({ valid: false });
+      jest.mocked(verifySync).mockReturnValue({ valid: false } as never);
       mockPrisma.opsUser.findUnique.mockResolvedValue({
         ...mockUser,
         twoFASecret: 'TESTSECRET',
       });
 
-      await expect(service.enable2FA('user-1', '000000')).rejects.toThrow(
-        UnauthorizedException,
-      );
+      await expect(service.enable2FA('user-1', '000000')).rejects.toThrow(UnauthorizedException);
     });
   });
 });

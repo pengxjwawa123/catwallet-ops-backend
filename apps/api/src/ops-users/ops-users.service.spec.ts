@@ -22,7 +22,11 @@ const mockPrisma = {
   refreshToken: { updateMany: jest.fn() },
 };
 
-const superadminCaller: RequestUser = { userId: 'u-super', username: 'admin', roles: ['superadmin'] };
+const superadminCaller: RequestUser = {
+  userId: 'u-super',
+  username: 'admin',
+  roles: ['superadmin'],
+};
 const operatorCaller: RequestUser = { userId: 'u-op', username: 'operator', roles: ['operator'] };
 
 describe('OpsUsersService', () => {
@@ -30,10 +34,7 @@ describe('OpsUsersService', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        OpsUsersService,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [OpsUsersService, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
     service = module.get<OpsUsersService>(OpsUsersService);
     jest.clearAllMocks();
@@ -42,7 +43,12 @@ describe('OpsUsersService', () => {
   describe('create', () => {
     it('creates a user (any caller with ops_user:create — guard already enforced)', async () => {
       mockPrisma.opsUser.findUnique.mockResolvedValue(null);
-      mockPrisma.opsUser.create.mockResolvedValue({ id: 'u1', username: 'alice', email: null, userRoles: [] });
+      mockPrisma.opsUser.create.mockResolvedValue({
+        id: 'u1',
+        username: 'alice',
+        email: null,
+        userRoles: [],
+      });
 
       const result = await service.create({ username: 'alice', password: 'pw' }, operatorCaller);
       expect(result).toHaveProperty('username', 'alice');
@@ -50,7 +56,9 @@ describe('OpsUsersService', () => {
 
     it('throws ConflictException when username already exists', async () => {
       mockPrisma.opsUser.findUnique.mockResolvedValue({ id: 'u1' });
-      await expect(service.create({ username: 'alice', password: 'pw' }, superadminCaller)).rejects.toThrow(ConflictException);
+      await expect(
+        service.create({ username: 'alice', password: 'pw' }, superadminCaller),
+      ).rejects.toThrow(ConflictException);
     });
   });
 
@@ -75,7 +83,11 @@ describe('OpsUsersService', () => {
   describe('update', () => {
     it('allows any caller with ops_user:update permission to update any user', async () => {
       mockPrisma.opsUser.findUnique.mockResolvedValue({ id: 'u1', username: 'alice' });
-      mockPrisma.opsUser.update.mockResolvedValue({ id: 'u1', username: 'alice', email: 'new@ex.com' });
+      mockPrisma.opsUser.update.mockResolvedValue({
+        id: 'u1',
+        username: 'alice',
+        email: 'new@ex.com',
+      });
 
       const result = await service.update('u1', { email: 'new@ex.com' }, operatorCaller);
       expect(result).toHaveProperty('email', 'new@ex.com');
@@ -83,7 +95,9 @@ describe('OpsUsersService', () => {
 
     it('throws NotFoundException when target user not found', async () => {
       mockPrisma.opsUser.findUnique.mockResolvedValue(null);
-      await expect(service.update('bad-id', { email: 'x@x.com' }, operatorCaller)).rejects.toThrow(NotFoundException);
+      await expect(service.update('bad-id', { email: 'x@x.com' }, operatorCaller)).rejects.toThrow(
+        NotFoundException,
+      );
     });
   });
 

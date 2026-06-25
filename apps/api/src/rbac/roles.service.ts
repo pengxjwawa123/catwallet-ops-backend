@@ -78,7 +78,9 @@ export class RolesService {
     }
 
     await this.prisma.opsRolePermission.upsert({
-      where: { opsRoleId_opsPermissionId: { opsRoleId: roleId, opsPermissionId: dto.permissionId } },
+      where: {
+        opsRoleId_opsPermissionId: { opsRoleId: roleId, opsPermissionId: dto.permissionId },
+      },
       update: {},
       create: { opsRoleId: roleId, opsPermissionId: dto.permissionId },
     });
