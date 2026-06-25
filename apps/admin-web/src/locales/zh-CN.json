@@ -150,6 +150,7 @@
     "valueRequired": "请输入翻译文本",
     "valuePlaceholder": "请输入 {{lang}} 翻译文本",
     "noChanges": "没有需要保存的修改",
+    "langNotAddable": "无法添加 {{langs}}：该词条在此语言下不存在，只能在上游新增。",
     "import": "批量导入",
     "importSuccess": "批量导入成功",
     "tab": {

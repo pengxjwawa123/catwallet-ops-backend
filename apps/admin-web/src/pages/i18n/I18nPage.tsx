@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { Button, message, Input, Modal, Form, Upload, Table, Alert, Tabs, Typography } from 'antd';
+import { Button, message, Input, Modal, Form, Upload, Tabs, Typography } from 'antd';
 import { PlusOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -127,18 +127,28 @@ export default function I18nPage() {
         // Update each changed language entry individually (API updates by id).
         const updates: Promise<unknown>[] = [];
         const changed: Record<string, string> = {};
+        const skipped: string[] = [];
         for (const lang of languages) {
           const cell = getCell(editingRow, lang);
           const next = values[`lang_${lang}`] ?? '';
-          if (cell && next !== cell.value) {
-            updates.push(
-              i18nApi.update({ configKey: editingRow.configKey, id: String(cell.id), value: next }),
-            );
-            changed[lang] = next;
+          if (cell) {
+            if (next !== cell.value) {
+              updates.push(
+                i18nApi.update({ configKey: editingRow.configKey, id: String(cell.id), value: next }),
+              );
+              changed[lang] = next;
+            }
+          } else if (next.trim()) {
+            // Upstream update works by entry id; a language with no existing
+            // entry cannot be added through this endpoint.
+            skipped.push(lang.toUpperCase());
           }
         }
+        if (skipped.length) {
+          message.warning(t('i18n.langNotAddable', { langs: skipped.join(', ') }));
+        }
         if (!updates.length) {
-          message.info(t('i18n.noChanges'));
+          if (!skipped.length) message.info(t('i18n.noChanges'));
           setModalOpen(false);
           return;
         }

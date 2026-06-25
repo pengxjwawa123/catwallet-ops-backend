@@ -107,10 +107,7 @@ describe('Auth E2E', () => {
   });
 
   it('POST /auth/refresh - revoked token returns 401', async () => {
-    await request(app.getHttpServer())
-      .post('/auth/refresh')
-      .send({ refreshToken })
-      .expect(401);
+    await request(app.getHttpServer()).post('/auth/refresh').send({ refreshToken }).expect(401);
   });
 
   it('POST /ops-users - non-superadmin returns 403', async () => {

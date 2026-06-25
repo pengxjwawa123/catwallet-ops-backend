@@ -25,10 +25,7 @@ describe('JobsProcessor', () => {
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [
-        JobsProcessor,
-        { provide: PrismaService, useValue: mockPrisma },
-      ],
+      providers: [JobsProcessor, { provide: PrismaService, useValue: mockPrisma }],
     }).compile();
     processor = module.get<JobsProcessor>(JobsProcessor);
     jest.clearAllMocks();

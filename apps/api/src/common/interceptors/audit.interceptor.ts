@@ -1,10 +1,4 @@
-import {
-  Injectable,
-  NestInterceptor,
-  ExecutionContext,
-  CallHandler,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NestInterceptor, ExecutionContext, CallHandler, Logger } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable, throwError } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
@@ -50,9 +44,7 @@ export class AuditInterceptor implements NestInterceptor {
     const method: string = req.method?.toUpperCase() ?? '';
     const path: string = req.route?.path ?? req.url ?? '';
 
-    const shouldAudit =
-      !SKIP_METHODS.has(method) &&
-      !SKIP_PATHS.some((p) => path.startsWith(p));
+    const shouldAudit = !SKIP_METHODS.has(method) && !SKIP_PATHS.some((p) => path.startsWith(p));
 
     if (!shouldAudit) return next.handle();
 
@@ -94,11 +86,7 @@ export class AuditInterceptor implements NestInterceptor {
     const segments = path.replace(/^\//, '').split('/');
     const target = segments[0] ?? undefined;
     const targetId =
-      params.id ??
-      params.userId ??
-      params.roleId ??
-      params.permissionId ??
-      undefined;
+      params.id ?? params.userId ?? params.roleId ?? params.permissionId ?? undefined;
 
     const ip =
       req.headers['x-forwarded-for']?.split(',')[0]?.trim() ??
@@ -118,9 +106,10 @@ export class AuditInterceptor implements NestInterceptor {
       if (error) {
         const errorSummary = error?.message ?? 'Unknown error';
         const status = error?.status ?? error?.statusCode ?? 500;
-        afterJson = Object.keys(safeBody).length > 0
-          ? { ...safeBody, status: 'failed', error: errorSummary, httpStatus: status }
-          : { status: 'failed', error: errorSummary, httpStatus: status };
+        afterJson =
+          Object.keys(safeBody).length > 0
+            ? { ...safeBody, status: 'failed', error: errorSummary, httpStatus: status }
+            : { status: 'failed', error: errorSummary, httpStatus: status };
       } else {
         afterJson = Object.keys(safeBody).length > 0 ? { ...safeBody, responseId } : { responseId };
       }

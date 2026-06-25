@@ -1,17 +1,5 @@
-import {
-  Controller,
-  Post,
-  Body,
-  Req,
-  HttpCode,
-  HttpStatus,
-} from '@nestjs/common';
-import {
-  ApiTags,
-  ApiOperation,
-  ApiBearerAuth,
-  ApiResponse,
-} from '@nestjs/swagger';
+import { Controller, Post, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RefreshTokenDto, LogoutDto } from './dto/login.dto';

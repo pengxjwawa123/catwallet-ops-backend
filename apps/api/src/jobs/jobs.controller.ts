@@ -1,11 +1,4 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Param,
-  Query,
-} from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiParam } from '@nestjs/swagger';
 import { JobsService } from './jobs.service';
 import { EnqueueJobDto, JobQueryDto } from './dto/job.dto';
@@ -27,7 +20,9 @@ export class JobsController {
   }
 
   @Get()
-  @ApiOperation({ summary: 'List jobs with pagination and optional filters (any authenticated user)' })
+  @ApiOperation({
+    summary: 'List jobs with pagination and optional filters (any authenticated user)',
+  })
   findAll(@Query() query: JobQueryDto) {
     return this.jobsService.findAll(query);
   }

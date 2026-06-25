@@ -38,8 +38,11 @@ describe('JobsService', () => {
   describe('enqueue', () => {
     it('creates a DB job record and enqueues it', async () => {
       const dbJob = {
-        id: 'job1', queue: DEFAULT_QUEUE, name: 'send-email',
-        status: JobStatus.PENDING, attempts: 0,
+        id: 'job1',
+        queue: DEFAULT_QUEUE,
+        name: 'send-email',
+        status: JobStatus.PENDING,
+        attempts: 0,
       };
       mockPrisma.job.create.mockResolvedValue(dbJob);
       mockQueue.add.mockResolvedValue({ id: 'job1' });
@@ -67,7 +70,12 @@ describe('JobsService', () => {
     it('filters by queue and status', async () => {
       mockPrisma.job.findMany.mockResolvedValue([]);
       mockPrisma.job.count.mockResolvedValue(0);
-      await service.findAll({ queue: DEFAULT_QUEUE, status: JobStatus.COMPLETED, page: 1, pageSize: 10 });
+      await service.findAll({
+        queue: DEFAULT_QUEUE,
+        status: JobStatus.COMPLETED,
+        page: 1,
+        pageSize: 10,
+      });
       expect(mockPrisma.job.findMany).toHaveBeenCalledWith(
         expect.objectContaining({
           where: { queue: DEFAULT_QUEUE, status: JobStatus.COMPLETED },

@@ -150,6 +150,7 @@
     "valueRequired": "Please enter a translation value",
     "valuePlaceholder": "Enter {{lang}} translation",
     "noChanges": "No changes to save",
+    "langNotAddable": "Cannot add {{langs}}: this key has no existing entry for that language, and it can only be added upstream.",
     "import": "Batch Import",
     "importSuccess": "Batch import succeeded",
     "tab": {

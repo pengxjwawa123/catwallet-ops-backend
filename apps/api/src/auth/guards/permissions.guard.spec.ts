@@ -80,9 +80,7 @@ describe('PermissionsGuard', () => {
     mockPrisma.opsUserRole.findMany.mockResolvedValue([
       {
         opsRole: {
-          rolePermissions: [
-            { opsPermission: { resource: 'audit', action: 'read' } },
-          ],
+          rolePermissions: [{ opsPermission: { resource: 'audit', action: 'read' } }],
         },
       },
     ]);

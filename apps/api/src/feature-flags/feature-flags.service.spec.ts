@@ -41,7 +41,9 @@ describe('FeatureFlagsService', () => {
     it('creates a flag', async () => {
       mockPrisma.featureFlag.findUnique.mockResolvedValue(null);
       mockPrisma.featureFlag.create.mockResolvedValue({
-        id: 'f1', key: 'test', status: FlagStatus.DISABLED,
+        id: 'f1',
+        key: 'test',
+        status: FlagStatus.DISABLED,
       });
       const result = await service.create({ key: 'test' });
       expect(result).toHaveProperty('key', 'test');

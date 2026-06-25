@@ -5,9 +5,7 @@ import { JobsController } from './jobs.controller';
 import { JobsProcessor } from './jobs.processor';
 
 @Module({
-  imports: [
-    BullModule.registerQueue({ name: DEFAULT_QUEUE }),
-  ],
+  imports: [BullModule.registerQueue({ name: DEFAULT_QUEUE })],
   providers: [JobsService, JobsProcessor],
   controllers: [JobsController],
   exports: [JobsService],

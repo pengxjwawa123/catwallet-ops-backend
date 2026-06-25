@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  Logger,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import * as argon2 from 'argon2';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
@@ -85,7 +80,7 @@ export class OpsUsersService {
     return this.sanitize(user);
   }
 
-  async update(id: string, dto: UpdateOpsUserDto, caller: RequestUser) {
+  async update(id: string, dto: UpdateOpsUserDto, _caller: RequestUser) {
     // Guard already enforces ops_user:update permission; self-edit is always allowed
     const user = await this.prisma.opsUser.findUnique({ where: { id } });
     if (!user) throw new NotFoundException('User not found');

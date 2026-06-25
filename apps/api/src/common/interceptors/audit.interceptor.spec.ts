@@ -60,7 +60,11 @@ describe('AuditInterceptor', () => {
 
   it('writes audit log for POST requests', (done) => {
     mockPrisma.auditLog.create.mockResolvedValue({});
-    const ctx = makeContext('POST', '/ops-users', { userId: 'u1', username: 'admin', roles: ['superadmin'] });
+    const ctx = makeContext('POST', '/ops-users', {
+      userId: 'u1',
+      username: 'admin',
+      roles: ['superadmin'],
+    });
     const next = { handle: () => of({ id: 'new-user-id' }) };
     interceptor.intercept(ctx, next as any).subscribe({
       complete: () => {
@@ -93,7 +97,12 @@ describe('AuditInterceptor', () => {
   });
 
   it('does not write audit log for /auth/logout (contains refreshToken)', (done) => {
-    const ctx = makeContext('POST', '/auth/logout', { userId: 'u1', username: 'admin' }, { refreshToken: 'secret-token' });
+    const ctx = makeContext(
+      'POST',
+      '/auth/logout',
+      { userId: 'u1', username: 'admin' },
+      { refreshToken: 'secret-token' },
+    );
     const next = { handle: () => of({}) };
     interceptor.intercept(ctx, next as any).subscribe({
       complete: () => {
@@ -105,8 +114,18 @@ describe('AuditInterceptor', () => {
 
   it('strips sensitive keys from request body before writing audit log', (done) => {
     mockPrisma.auditLog.create.mockResolvedValue({});
-    const body = { username: 'alice', password: 'secret', newPassword: 'newsecret', refreshToken: 'tok' };
-    const ctx = makeContext('POST', '/ops-users', { userId: 'u1', username: 'admin', roles: ['superadmin'] }, body);
+    const body = {
+      username: 'alice',
+      password: 'secret',
+      newPassword: 'newsecret',
+      refreshToken: 'tok',
+    };
+    const ctx = makeContext(
+      'POST',
+      '/ops-users',
+      { userId: 'u1', username: 'admin', roles: ['superadmin'] },
+      body,
+    );
     const next = { handle: () => of({ id: 'new-id' }) };
     interceptor.intercept(ctx, next as any).subscribe({
       complete: () => {
@@ -125,7 +144,11 @@ describe('AuditInterceptor', () => {
 
   it('writes a failure audit log when a write operation throws', (done) => {
     mockPrisma.auditLog.create.mockResolvedValue({});
-    const ctx = makeContext('POST', '/ops-users', { userId: 'u1', username: 'admin', roles: ['superadmin'] });
+    const ctx = makeContext('POST', '/ops-users', {
+      userId: 'u1',
+      username: 'admin',
+      roles: ['superadmin'],
+    });
     const error = Object.assign(new Error('Forbidden'), { status: 403 });
     const next = { handle: () => throwError(() => error) };
     interceptor.intercept(ctx, next as any).subscribe({
