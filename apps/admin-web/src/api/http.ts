@@ -9,43 +9,6 @@ export const http = axios.create({
   timeout: 15000,
 });
 
-export const createUpstreamHttp = (baseURL: string) => {
-  const client = axios.create({
-    baseURL,
-    timeout: 15000,
-  });
-
-  client.interceptors.response.use(
-    (response) => {
-      const body = response.data;
-      if (body && typeof body === 'object') {
-        if ('code' in body) {
-          const envelope = body as { code?: string; msg?: string; data?: unknown };
-          if (envelope.code && envelope.code !== '200') {
-            message.error(envelope.msg ?? envelope.code);
-            return Promise.reject(new Error(envelope.msg ?? envelope.code));
-          }
-          return envelope.data ?? body;
-        }
-        if ('data' in body && 'timestamp' in body) {
-          return (body as { data: unknown }).data;
-        }
-      }
-      return body;
-    },
-    (error: AxiosError) => {
-      const data = error.response?.data as
-        | { message?: string; msg?: string; code?: string }
-        | undefined;
-      const msg = data?.message ?? data?.msg ?? error.message ?? 'Request failed';
-      message.error(msg);
-      return Promise.reject(error);
-    },
-  );
-
-  return client;
-};
-
 let isRefreshing = false;
 type QueueItem = { resolve: (token: string) => void; reject: (err: unknown) => void };
 let queue: QueueItem[] = [];

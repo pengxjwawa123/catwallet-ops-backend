@@ -24,10 +24,9 @@ npm run preview
 
 ```
 VITE_API_BASE_URL=http://localhost:3001
-VITE_I18N_API_BASE_URL=https://dev.api.catwallet.ai/gt/wallet/api/i18n/config
 ```
 
-其中普通后台接口继续走 `VITE_API_BASE_URL`；国际化管理页直连 `VITE_I18N_API_BASE_URL`。
+所有后台接口（含国际化管理页）统一走 `VITE_API_BASE_URL`，由后端代理上游 CatWallet i18n API，避免浏览器跨域。
 
 ## 技术栈
 

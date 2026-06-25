@@ -1,4 +1,4 @@
-import http, { createUpstreamHttp } from './http';
+import http from './http';
 import type {
   LoginResponse,
   OpsUser,
@@ -13,11 +13,6 @@ import type {
   I18nConfigItem,
   I18nOpLog,
 } from '@/utils/types';
-
-const i18nHttp = createUpstreamHttp(
-  import.meta.env.VITE_I18N_API_BASE_URL ??
-    'https://dev.api.catwallet.ai/gt/wallet/api/i18n/config',
-);
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -175,20 +170,20 @@ export const announcementsApi = {
 // ── I18n ──────────────────────────────────────────────────────────────────────
 
 export const i18nApi = {
-  list: () => i18nHttp.post<unknown, I18nConfigItem[]>('/list'),
+  list: () => http.get<unknown, I18nConfigItem[]>('/i18n'),
 
-  search: (keyword: string) => i18nHttp.post<unknown, I18nConfigItem[]>('/search', { keyword }),
+  search: (keyword: string) => http.post<unknown, I18nConfigItem[]>('/i18n/search', { keyword }),
 
   add: (data: { configKey: string; zh: string; en: string }) =>
-    i18nHttp.post<unknown, unknown>('/add', data),
+    http.post<unknown, unknown>('/i18n', data),
 
   update: (data: { configKey: string; id: string; value: string }) =>
-    i18nHttp.post<unknown, unknown>('/update', data),
+    http.put<unknown, unknown>('/i18n', data),
 
   batchImport: (file: File) => {
     const form = new FormData();
     form.append('file', file);
-    return i18nHttp.post<unknown, unknown>('/batch/add', form, {
+    return http.post<unknown, unknown>('/i18n/batch', form, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
   },
