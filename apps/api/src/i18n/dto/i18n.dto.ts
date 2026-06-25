@@ -1,50 +1,46 @@
-import { IsOptional, IsString, IsNotEmpty, IsObject, IsInt, Min } from 'class-validator';
+import { IsOptional, IsString, IsNotEmpty, IsInt, Min } from 'class-validator';
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Type } from 'class-transformer';
 
-export class I18nConfigRequestDto {
-  @ApiPropertyOptional({ example: 'zh', description: 'Filter by language code' })
-  @IsOptional()
+export class AddI18nDto {
+  @ApiProperty({ example: 'common.cancel', description: 'Translation key' })
   @IsString()
-  language?: string;
+  @IsNotEmpty()
+  configKey: string;
+
+  @ApiProperty({ example: '取消', description: 'Chinese translation' })
+  @IsString()
+  @IsNotEmpty()
+  zh: string;
+
+  @ApiProperty({ example: 'Cancel', description: 'English translation' })
+  @IsString()
+  @IsNotEmpty()
+  en: string;
 }
 
-export class CreateI18nEntryDto {
-  @ApiProperty({ example: 'cancel' })
+export class UpdateI18nDto {
+  @ApiProperty({ example: 'common.cancel', description: 'Translation key' })
   @IsString()
   @IsNotEmpty()
-  key: string;
+  configKey: string;
 
-  @ApiProperty({ example: 'en' })
+  @ApiProperty({ example: '5048', description: 'Entry id to update' })
   @IsString()
   @IsNotEmpty()
-  language: string;
+  id: string;
 
-  @ApiProperty({ example: 'Cancel' })
+  @ApiProperty({ example: 'Cancel', description: 'New translation value' })
   @IsString()
   @IsNotEmpty()
   value: string;
 }
 
-export class UpdateI18nEntryDto {
-  @ApiPropertyOptional({ example: 'Cancel' })
-  @IsOptional()
-  @IsString()
-  value?: string;
-}
-
-export class UpsertI18nKeyDto {
-  @ApiProperty({ example: 'cancel', description: 'Translation key' })
+export class SearchI18nDto {
+  @ApiProperty({ example: 'Vote and Earn Rewards', description: 'Keyword to search by key or value' })
   @IsString()
   @IsNotEmpty()
-  key: string;
-
-  @ApiProperty({
-    example: { en: 'Cancel', zh: '取消' },
-    description: 'Language → value map',
-  })
-  @IsObject()
-  translations: Record<string, string>;
+  keyword: string;
 }
 
 export class I18nOpLogQueryDto {

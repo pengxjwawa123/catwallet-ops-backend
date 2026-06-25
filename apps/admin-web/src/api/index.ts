@@ -1,5 +1,5 @@
 import http from './http';
-import type { LoginResponse, OpsUser, PagedData, Role, Permission, AuditLog, FeatureFlag, RemoteConfig, Announcement, Job, I18nEntry, I18nConfigResponse, I18nOpLog } from '@/utils/types';
+import type { LoginResponse, OpsUser, PagedData, Role, Permission, AuditLog, FeatureFlag, RemoteConfig, Announcement, Job, I18nConfigItem, I18nOpLog } from '@/utils/types';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -176,32 +176,25 @@ export const announcementsApi = {
 // ── I18n ──────────────────────────────────────────────────────────────────────
 
 export const i18nApi = {
-  getConfig: (language?: string) =>
-    http.post<unknown, I18nConfigResponse>('/i18n/config', { language }),
+  list: () =>
+    http.get<unknown, I18nConfigItem[]>('/i18n'),
 
-  list: (params: { page?: number; pageSize?: number }) =>
-    http.get<unknown, PagedData<I18nEntry>>('/i18n', { params }),
+  search: (keyword: string) =>
+    http.post<unknown, I18nConfigItem[]>('/i18n/search', { keyword }),
 
-  get: (id: string) =>
-    http.get<unknown, I18nEntry>(`/i18n/${id}`),
+  add: (data: { configKey: string; zh: string; en: string }) =>
+    http.post<unknown, unknown>('/i18n', data),
 
-  getByKey: (key: string) =>
-    http.get<unknown, { key: string; translations: Record<string, string> }>(`/i18n/key/${encodeURIComponent(key)}`),
+  update: (data: { configKey: string; id: string; value: string }) =>
+    http.put<unknown, unknown>('/i18n', data),
 
-  upsertKey: (data: { key: string; translations: Record<string, string> }) =>
-    http.post<unknown, I18nEntry[]>('/i18n/key', data),
-
-  create: (data: { key: string; language: string; value: string }) =>
-    http.post<unknown, I18nEntry>('/i18n', data),
-
-  update: (id: string, data: { value?: string }) =>
-    http.put<unknown, I18nEntry>(`/i18n/${id}`, data),
-
-  removeByKey: (key: string) =>
-    http.delete(`/i18n/key/${encodeURIComponent(key)}`),
-
-  remove: (id: string) =>
-    http.delete(`/i18n/${id}`),
+  batchImport: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return http.post<unknown, unknown>('/i18n/batch', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    });
+  },
 
   getOpLogs: (params: { page?: number; pageSize?: number; action?: string; key?: string }) =>
     http.get<unknown, PagedData<I18nOpLog>>('/i18n/op-logs', { params }),
