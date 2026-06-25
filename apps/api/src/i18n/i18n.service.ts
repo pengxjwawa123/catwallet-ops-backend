@@ -54,7 +54,10 @@ export class I18nService {
   }
 
   private authHeaders(): Record<string, string> {
-    return { Authorization: `Bearer ${this.apiToken}` };
+    // Only attach the Authorization header when a token is configured.
+    // The CatWallet i18n endpoints are currently callable without auth; sending
+    // an empty `Bearer ` would make the upstream reject the request (→ 502).
+    return this.apiToken ? { Authorization: `Bearer ${this.apiToken}` } : {};
   }
 
   /**
