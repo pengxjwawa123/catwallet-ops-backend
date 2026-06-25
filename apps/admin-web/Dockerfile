@@ -5,10 +5,8 @@ COPY package*.json ./
 RUN npm ci
 COPY . .
 ARG VITE_API_BASE_URL=/api
-ARG VITE_I18N_API_BASE_URL=https://dev.api.catwallet.ai/gt/wallet/api/i18n/config
-# 普通后台 API 继续走 /api 反代；i18n 直连独立 CatWallet API。
+# 所有后台 API（含 i18n）统一走 /api 反代到后端，由后端代理上游 CatWallet。
 ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
-ENV VITE_I18N_API_BASE_URL=${VITE_I18N_API_BASE_URL}
 RUN npm run build
 
 # ── Stage 2: nginx 托管 ─────────────────────────────────────────
