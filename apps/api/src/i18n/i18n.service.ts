@@ -66,7 +66,18 @@ export class I18nService {
    */
   private async parseEnvelope<T>(response: Response, context: string): Promise<T> {
     if (!response.ok) {
-      this.logger.error(`${context} failed: ${response.status} ${response.statusText}`);
+      // Read the upstream body so the original CatWallet error (e.g. its
+      // { code, message } envelope) shows up in our logs instead of just the
+      // HTTP status. Guard the read in case the body is empty/unreadable.
+      let body = '';
+      try {
+        body = await response.text();
+      } catch {
+        body = '<unreadable response body>';
+      }
+      this.logger.error(
+        `${context} failed: ${response.status} ${response.statusText} - upstream body: ${body}`,
+      );
       throw new BadGatewayException(`CatWallet API ${context} failed (${response.status})`);
     }
     const json = (await response.json()) as CatWalletEnvelope<T>;
