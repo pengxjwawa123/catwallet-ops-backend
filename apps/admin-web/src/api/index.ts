@@ -12,7 +12,7 @@ import type {
   Job,
   I18nConfigItem,
   I18nOpLog,
-} from '@/utils/types';
+} from '../utils/types';
 
 // ── Auth ──────────────────────────────────────────────────────────────────────
 
@@ -48,7 +48,7 @@ export const opsUsersApi = {
     http.put<unknown, OpsUser>(`/ops-users/${id}`, data),
 
   resetPassword: (id: string, password: string) =>
-    http.patch(`/ops-users/${id}/password`, { password }),
+    http.patch(`/ops-users/${id}/password`, { newPassword: password }),
 
   setStatus: (id: string, status: 'ACTIVE' | 'INACTIVE') =>
     http.patch(`/ops-users/${id}/status`, { status }),
