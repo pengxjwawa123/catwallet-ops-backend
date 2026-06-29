@@ -7,6 +7,7 @@ import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { PermissionsGuard } from './guards/permissions.guard';
+import { PermissionResolverService } from './permission-resolver.service';
 import { PrismaModule } from '../prisma/prisma.module';
 import { RedisModule } from '../common/redis/redis.module';
 
@@ -26,8 +27,8 @@ import { RedisModule } from '../common/redis/redis.module';
     PrismaModule,
     RedisModule,
   ],
-  providers: [AuthService, JwtStrategy, JwtAuthGuard, PermissionsGuard],
+  providers: [AuthService, JwtStrategy, JwtAuthGuard, PermissionsGuard, PermissionResolverService],
   controllers: [AuthController],
-  exports: [AuthService, JwtAuthGuard, JwtModule, PermissionsGuard],
+  exports: [AuthService, JwtAuthGuard, JwtModule, PermissionsGuard, PermissionResolverService],
 })
 export class AuthModule {}

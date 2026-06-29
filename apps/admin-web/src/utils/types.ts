@@ -34,6 +34,13 @@ export interface JwtPayload {
   roles: string[];
 }
 
+export interface MeResponse {
+  userId: string;
+  username: string;
+  roles: string[];
+  permissions: string[];
+}
+
 // Ops Users
 export interface OpsUser {
   id: string;

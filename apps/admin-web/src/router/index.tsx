@@ -1,8 +1,10 @@
 import { lazy, Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import RequireAuth from './RequireAuth';
+import RequirePermission from './RequirePermission';
 import MainLayout from '@/layouts/MainLayout';
 import { Spin } from 'antd';
+import { PERMISSIONS } from '@/utils/permissions';
 
 const LoginPage        = lazy(() => import('@/pages/login/LoginPage'));
 const DashboardPage    = lazy(() => import('@/pages/dashboard/DashboardPage'));
@@ -37,15 +39,78 @@ export default function AppRouter() {
         >
           <Route index element={<Navigate to="/dashboard" replace />} />
           <Route path="dashboard"       element={<DashboardPage />} />
-          <Route path="ops-users"       element={<OpsUsersPage />} />
-          <Route path="rbac/roles"      element={<RolesPage />} />
-          <Route path="rbac/permissions"element={<PermissionsPage />} />
-          <Route path="audit-logs"      element={<AuditLogsPage />} />
-          <Route path="feature-flags"   element={<FeatureFlagsPage />} />
-          <Route path="remote-configs"  element={<RemoteConfigsPage />} />
-          <Route path="announcements"   element={<AnnouncementsPage />} />
-          <Route path="i18n"            element={<I18nPage />} />
-          <Route path="jobs"            element={<JobsPage />} />
+          <Route
+            path="ops-users"
+            element={
+              <RequirePermission permission={PERMISSIONS.opsUser.read}>
+                <OpsUsersPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="rbac/roles"
+            element={
+              <RequirePermission permission={PERMISSIONS.rbac.manage}>
+                <RolesPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="rbac/permissions"
+            element={
+              <RequirePermission permission={PERMISSIONS.rbac.manage}>
+                <PermissionsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="audit-logs"
+            element={
+              <RequirePermission permission={PERMISSIONS.audit.read}>
+                <AuditLogsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="feature-flags"
+            element={
+              <RequirePermission permission={PERMISSIONS.featureFlag.read}>
+                <FeatureFlagsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="remote-configs"
+            element={
+              <RequirePermission permission={PERMISSIONS.remoteConfig.read}>
+                <RemoteConfigsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="announcements"
+            element={
+              <RequirePermission permission={PERMISSIONS.announcement.read}>
+                <AnnouncementsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="i18n"
+            element={
+              <RequirePermission permission={PERMISSIONS.i18n.read}>
+                <I18nPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="jobs"
+            element={
+              <RequirePermission permission={PERMISSIONS.job.read}>
+                <JobsPage />
+              </RequirePermission>
+            }
+          />
         </Route>
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

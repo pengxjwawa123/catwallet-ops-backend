@@ -13,22 +13,24 @@ export class JobsController {
   constructor(private readonly jobsService: JobsService) {}
 
   @Post()
-  @RequirePermission('superadmin')
-  @ApiOperation({ summary: 'Enqueue a job (superadmin only)' })
+  @RequirePermission('job:manage')
+  @ApiOperation({ summary: 'Enqueue a job' })
   enqueue(@Body() dto: EnqueueJobDto, @CurrentUser() _user: RequestUser) {
     return this.jobsService.enqueue(dto);
   }
 
   @Get()
+  @RequirePermission('job:read')
   @ApiOperation({
-    summary: 'List jobs with pagination and optional filters (any authenticated user)',
+    summary: 'List jobs with pagination and optional filters',
   })
   findAll(@Query() query: JobQueryDto) {
     return this.jobsService.findAll(query);
   }
 
   @Get(':id')
-  @ApiOperation({ summary: 'Get job by ID (any authenticated user)' })
+  @RequirePermission('job:read')
+  @ApiOperation({ summary: 'Get job by ID' })
   @ApiParam({ name: 'id', type: String })
   findOne(@Param('id') id: string) {
     return this.jobsService.findOne(id);

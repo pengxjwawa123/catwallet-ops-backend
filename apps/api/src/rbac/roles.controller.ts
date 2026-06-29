@@ -61,11 +61,16 @@ export class RolesController {
   @ApiOperation({ summary: 'Remove permission from role' })
   @ApiParam({ name: 'id', type: String })
   @ApiParam({ name: 'permissionId', type: String })
-  removePermission(@Param('id') id: string, @Param('permissionId') permissionId: string) {
-    return this.rolesService.removePermission(id, permissionId);
+  removePermission(
+    @Param('id') id: string,
+    @Param('permissionId') permissionId: string,
+    @CurrentUser() caller: RequestUser,
+  ) {
+    return this.rolesService.removePermission(id, permissionId, caller);
   }
 
   @Post('users/:userId/assign')
+  @RequirePermission('role:assign')
   @ApiOperation({ summary: 'Assign role to user' })
   @ApiParam({ name: 'userId', type: String })
   assignRoleToUser(
@@ -77,10 +82,15 @@ export class RolesController {
   }
 
   @Delete('users/:userId/roles/:roleId')
+  @RequirePermission('role:assign')
   @ApiOperation({ summary: 'Remove role from user' })
   @ApiParam({ name: 'userId', type: String })
   @ApiParam({ name: 'roleId', type: String })
-  removeRoleFromUser(@Param('userId') userId: string, @Param('roleId') roleId: string) {
-    return this.rolesService.removeRoleFromUser(userId, roleId);
+  removeRoleFromUser(
+    @Param('userId') userId: string,
+    @Param('roleId') roleId: string,
+    @CurrentUser() caller: RequestUser,
+  ) {
+    return this.rolesService.removeRoleFromUser(userId, roleId, caller);
   }
 }

@@ -20,6 +20,8 @@ import {
   CreateI18nOpLogDto,
 } from './dto/i18n.dto';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
+import { CurrentUser } from '../auth/decorators/current-user.decorator';
+import { RequestUser } from '../auth/strategies/jwt.strategy';
 
 /** Minimal shape of a multer-parsed upload (avoids depending on @types/multer). */
 interface UploadedFileLike {
@@ -88,12 +90,9 @@ export class I18nController {
   @Post('op-logs')
   @RequirePermission('i18n:manage')
   @ApiOperation({ summary: 'Create i18n operation log' })
-  createOpLog(@Body() dto: CreateI18nOpLogDto) {
-    return this.i18nService.writeOpLog(
-      dto.action,
-      dto.operator ?? null,
-      dto.key ?? null,
-      dto.detail,
-    );
+  createOpLog(@Body() dto: CreateI18nOpLogDto, @CurrentUser() caller: RequestUser) {
+    // Operator is derived from the authenticated principal, never the request
+    // body, so the audit actor cannot be spoofed.
+    return this.i18nService.writeOpLog(dto.action, caller.username, dto.key ?? null, dto.detail);
   }
 }

@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { opsUsersApi, rolesApi } from '@/api';
 import type { OpsUser, Role } from '@/utils/types';
 import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 export default function OpsUsersPage() {
   const { t } = useTranslation();
@@ -21,7 +22,9 @@ export default function OpsUsersPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
 
-  const canWrite = superAdmin || hasPermission('ops_user:create') || hasPermission('ops_user:update');
+  const canCreate = superAdmin || hasPermission(PERMISSIONS.opsUser.create);
+  const canUpdate = superAdmin || hasPermission(PERMISSIONS.opsUser.update);
+  const canDelete = superAdmin || hasPermission(PERMISSIONS.opsUser.delete);
 
   const loadRoles = async () => {
     try {
@@ -135,37 +138,38 @@ export default function OpsUsersPage() {
       title: t('common.actions'),
       valueType: 'option',
       width: 280,
-      render: (_, record) =>
-        canWrite
-          ? [
-              <Button key="edit" type="link" size="small" onClick={() => openEdit(record)}>
-                {t('common.edit')}
-              </Button>,
-              <Button key="pwd" type="link" size="small" onClick={() => openPwd(record)}>
-                {t('opsUsers.resetPassword')}
-              </Button>,
-              <Button key="role" type="link" size="small" onClick={() => openRole(record)}>
-                {t('opsUsers.assignRole')}
-              </Button>,
-              <Button
-                key="toggle"
-                type="link"
-                size="small"
-                onClick={() => toggleStatus(record)}
-              >
-                {record.status === 'ACTIVE' ? t('opsUsers.deactivate') : t('opsUsers.activate')}
-              </Button>,
-              <Popconfirm
-                key="del"
-                title={t('common.confirmDelete')}
-                onConfirm={() => handleDelete(record.id)}
-              >
-                <Button type="link" size="small" danger>
-                  {t('common.delete')}
-                </Button>
-              </Popconfirm>,
-            ]
-          : [],
+      render: (_, record) => [
+        ...(canUpdate ? [
+          <Button key="edit" type="link" size="small" onClick={() => openEdit(record)}>
+            {t('common.edit')}
+          </Button>,
+          <Button key="pwd" type="link" size="small" onClick={() => openPwd(record)}>
+            {t('opsUsers.resetPassword')}
+          </Button>,
+          <Button key="role" type="link" size="small" onClick={() => openRole(record)}>
+            {t('opsUsers.assignRole')}
+          </Button>,
+          <Button
+            key="toggle"
+            type="link"
+            size="small"
+            onClick={() => toggleStatus(record)}
+          >
+            {record.status === 'ACTIVE' ? t('opsUsers.deactivate') : t('opsUsers.activate')}
+          </Button>,
+        ] : []),
+        ...(canDelete ? [
+          <Popconfirm
+            key="del"
+            title={t('common.confirmDelete')}
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <Button type="link" size="small" danger>
+              {t('common.delete')}
+            </Button>
+          </Popconfirm>,
+        ] : []),
+      ],
     },
   ];
 
@@ -177,7 +181,7 @@ export default function OpsUsersPage() {
         rowKey="id"
         search={false}
         toolBarRender={() =>
-          canWrite
+          canCreate
             ? [
                 <Button key="create" type="primary" icon={<PlusOutlined />} onClick={openCreate}>
                   {t('opsUsers.createUser')}

@@ -6,9 +6,13 @@ import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { remoteConfigsApi } from '@/api';
 import type { RemoteConfig } from '@/utils/types';
+import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 export default function RemoteConfigsPage() {
   const { t } = useTranslation();
+  const { superAdmin, hasPermission } = useAuth();
+  const canManage = superAdmin || hasPermission(PERMISSIONS.remoteConfig.manage);
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
@@ -56,18 +60,20 @@ export default function RemoteConfigsPage() {
       valueType: 'option',
       width: 160,
       render: (_, record) => [
-        <Button key="edit" type="link" size="small" onClick={() => openEdit(record)}>
-          {t('common.edit')}
-        </Button>,
-        <Popconfirm
-          key="del"
-          title={t('common.confirmDelete')}
-          onConfirm={() => handleDelete(record.id)}
-        >
-          <Button type="link" size="small" danger>
-            {t('common.delete')}
-          </Button>
-        </Popconfirm>,
+        ...(canManage ? [
+          <Button key="edit" type="link" size="small" onClick={() => openEdit(record)}>
+            {t('common.edit')}
+          </Button>,
+          <Popconfirm
+            key="del"
+            title={t('common.confirmDelete')}
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <Button type="link" size="small" danger>
+              {t('common.delete')}
+            </Button>
+          </Popconfirm>,
+        ] : []),
       ],
     },
   ];
@@ -79,11 +85,11 @@ export default function RemoteConfigsPage() {
         actionRef={actionRef}
         rowKey="id"
         search={false}
-        toolBarRender={() => [
+        toolBarRender={() => canManage ? [
           <Button key="create" type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             {t('remoteConfigs.createConfig')}
           </Button>,
-        ]}
+        ] : []}
         request={async ({ current = 1, pageSize = 10 }) => {
           const data = await remoteConfigsApi.list({ page: current, pageSize });
           return { data: data.items, total: data.total, success: true };

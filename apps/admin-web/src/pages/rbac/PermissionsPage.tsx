@@ -6,9 +6,13 @@ import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { permissionsApi } from '@/api';
 import type { Permission } from '@/utils/types';
+import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 export default function PermissionsPage() {
   const { t } = useTranslation();
+  const { superAdmin, hasPermission } = useAuth();
+  const canManage = superAdmin || hasPermission(PERMISSIONS.rbac.manage);
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
@@ -38,15 +42,17 @@ export default function PermissionsPage() {
       valueType: 'option',
       width: 100,
       render: (_, record) => [
-        <Popconfirm
-          key="del"
-          title={t('common.confirmDelete')}
-          onConfirm={() => handleDelete(record.id)}
-        >
-          <Button type="link" size="small" danger>
-            {t('common.delete')}
-          </Button>
-        </Popconfirm>,
+        ...(canManage ? [
+          <Popconfirm
+            key="del"
+            title={t('common.confirmDelete')}
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <Button type="link" size="small" danger>
+              {t('common.delete')}
+            </Button>
+          </Popconfirm>,
+        ] : []),
       ],
     },
   ];
@@ -58,11 +64,11 @@ export default function PermissionsPage() {
         actionRef={actionRef}
         rowKey="id"
         search={false}
-        toolBarRender={() => [
+        toolBarRender={() => canManage ? [
           <Button key="create" type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setModalOpen(true); }}>
             {t('rbac.createPermission')}
           </Button>,
-        ]}
+        ] : []}
         request={async () => {
           const data = await permissionsApi.list();
           const items = Array.isArray(data) ? data : [];

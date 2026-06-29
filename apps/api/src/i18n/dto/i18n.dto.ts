@@ -78,10 +78,8 @@ export class CreateI18nOpLogDto {
   @IsNotEmpty()
   action: string;
 
-  @ApiPropertyOptional({ example: 'admin' })
-  @IsOptional()
-  @IsString()
-  operator?: string;
+  // `operator` is intentionally NOT accepted from the client — it is derived
+  // from the authenticated principal server-side to prevent audit spoofing.
 
   @ApiPropertyOptional({ example: 'common.cancel' })
   @IsOptional()

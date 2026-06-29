@@ -20,6 +20,8 @@ const PERMISSIONS: { resource: string; action: string; description: string }[] =
   { resource: 'announcement', action: 'manage', description: 'Manage announcements' },
   { resource: 'i18n', action: 'read', description: 'Read i18n entries' },
   { resource: 'i18n', action: 'manage', description: 'Manage i18n entries' },
+  { resource: 'job', action: 'read', description: 'Read jobs' },
+  { resource: 'job', action: 'manage', description: 'Enqueue and manage jobs' },
 ];
 
 // Permissions granted to operator role (read-only + audit read)
@@ -30,6 +32,7 @@ const OPERATOR_PERMISSIONS = new Set([
   'remote_config:read',
   'announcement:read',
   'i18n:read',
+  'job:read',
 ]);
 
 async function main() {

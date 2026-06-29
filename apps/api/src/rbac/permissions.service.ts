@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException, ConflictException, Logger } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { PermissionResolverService } from '../auth/permission-resolver.service';
 import { CreatePermissionDto } from './dto/rbac.dto';
 
 @Injectable()
@@ -9,7 +9,7 @@ export class PermissionsService {
 
   constructor(
     private readonly prisma: PrismaService,
-    private readonly permissionsGuard: PermissionsGuard,
+    private readonly resolver: PermissionResolverService,
   ) {}
 
   async findAll() {
@@ -41,15 +41,7 @@ export class PermissionsService {
     await this.findOne(id);
     await this.prisma.opsPermission.delete({ where: { id } });
     // Invalidate all user caches since a permission was removed (broad but safe)
-    await this.invalidateAllCaches();
+    await this.resolver.invalidateAllCaches();
     return { success: true };
-  }
-
-  private async invalidateAllCaches() {
-    // Fetch all users and invalidate their permission caches
-    const users = await this.prisma.opsUser.findMany({ select: { id: true } });
-    for (const u of users) {
-      await this.permissionsGuard.invalidateUserCache(u.id);
-    }
   }
 }

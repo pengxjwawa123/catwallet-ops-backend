@@ -6,6 +6,8 @@ import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { announcementsApi } from '@/api';
 import type { Announcement } from '@/utils/types';
+import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 const statusColor: Record<string, string> = {
   DRAFT: 'default',
@@ -15,6 +17,8 @@ const statusColor: Record<string, string> = {
 
 export default function AnnouncementsPage() {
   const { t } = useTranslation();
+  const { superAdmin, hasPermission } = useAuth();
+  const canManage = superAdmin || hasPermission(PERMISSIONS.announcement.manage);
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [modalOpen, setModalOpen] = useState(false);
@@ -84,32 +88,36 @@ export default function AnnouncementsPage() {
       width: 320,
       render: (_, record) => (
         <Space size={0} wrap>
-          <Button type="link" size="small" onClick={() => openEdit(record)}>
-            {t('common.edit')}
-          </Button>
-          {record.status === 'DRAFT' && (
+          {canManage && (
+            <Button type="link" size="small" onClick={() => openEdit(record)}>
+              {t('common.edit')}
+            </Button>
+          )}
+          {canManage && record.status === 'DRAFT' && (
             <Button type="link" size="small" onClick={() => handleAction('publish', record.id)}>
               {t('announcements.publish')}
             </Button>
           )}
-          {record.status === 'PUBLISHED' && (
+          {canManage && record.status === 'PUBLISHED' && (
             <Button type="link" size="small" onClick={() => handleAction('unpublish', record.id)}>
               {t('announcements.unpublish')}
             </Button>
           )}
-          {record.status !== 'ARCHIVED' && (
+          {canManage && record.status !== 'ARCHIVED' && (
             <Button type="link" size="small" onClick={() => handleAction('archive', record.id)}>
               {t('announcements.archive')}
             </Button>
           )}
-          <Popconfirm
-            title={t('common.confirmDelete')}
-            onConfirm={() => handleDelete(record.id)}
-          >
-            <Button type="link" size="small" danger>
-              {t('common.delete')}
-            </Button>
-          </Popconfirm>
+          {canManage && (
+            <Popconfirm
+              title={t('common.confirmDelete')}
+              onConfirm={() => handleDelete(record.id)}
+            >
+              <Button type="link" size="small" danger>
+                {t('common.delete')}
+              </Button>
+            </Popconfirm>
+          )}
         </Space>
       ),
     },
@@ -122,11 +130,11 @@ export default function AnnouncementsPage() {
         actionRef={actionRef}
         rowKey="id"
         search={false}
-        toolBarRender={() => [
+        toolBarRender={() => canManage ? [
           <Button key="create" type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             {t('announcements.createAnn')}
           </Button>,
-        ]}
+        ] : []}
         request={async ({ current = 1, pageSize = 10 }) => {
           const data = await announcementsApi.list({ page: current, pageSize });
           return { data: data.items, total: data.total, success: true };

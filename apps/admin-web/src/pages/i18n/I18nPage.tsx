@@ -154,14 +154,13 @@ export default function I18nPage() {
         }
         await Promise.all(updates);
         i18nApi
-          .createOpLog({ action: 'update', operator: 'admin', key: editingRow.configKey, detail: { changed } })
+          .createOpLog({ action: 'update', key: editingRow.configKey, detail: { changed } })
           .catch(() => {});
       } else {
         await i18nApi.add({ configKey: values.configKey, zh: values.lang_zh, en: values.lang_en });
         i18nApi
           .createOpLog({
             action: 'create',
-            operator: 'admin',
             key: values.configKey,
             detail: { zh: values.lang_zh, en: values.lang_en },
           })
@@ -185,7 +184,7 @@ export default function I18nPage() {
     try {
       await i18nApi.batchImport(file);
       i18nApi
-        .createOpLog({ action: 'batch_import', operator: 'admin', detail: { fileName: file.name } })
+        .createOpLog({ action: 'batch_import', detail: { fileName: file.name } })
         .catch(() => {});
       message.success(t('i18n.importSuccess'));
       fetchList();

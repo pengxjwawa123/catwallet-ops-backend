@@ -1,6 +1,7 @@
 import http from './http';
 import type {
   LoginResponse,
+  MeResponse,
   OpsUser,
   PagedData,
   Role,
@@ -31,6 +32,8 @@ export const authApi = {
   setup2FA: () => http.post<unknown, { otpauthUrl: string; secret: string }>('/auth/2fa/setup'),
 
   enable2FA: (token: string) => http.post('/auth/2fa/enable', { token }),
+
+  me: () => http.get<unknown, MeResponse>('/auth/me'),
 };
 
 // ── Ops Users ─────────────────────────────────────────────────────────────────
@@ -191,7 +194,7 @@ export const i18nApi = {
   getOpLogs: (params: { page?: number; pageSize?: number; action?: string; key?: string }) =>
     http.get<unknown, PagedData<I18nOpLog>>('/i18n/op-logs', { params }),
 
-  createOpLog: (data: { action: string; operator?: string; key?: string; detail?: unknown }) =>
+  createOpLog: (data: { action: string; key?: string; detail?: unknown }) =>
     http.post<unknown, I18nOpLog>('/i18n/op-logs', data),
 };
 
