@@ -47,8 +47,6 @@ export default function RolesPage() {
   const openAssignPerms = async (record: Role) => {
     setAssigningRole(record);
     await loadPerms();
-    const currentIds = record.permissions?.map((p) => p.id) ?? [];
-    permForm.setFieldsValue({ permissionIds: currentIds });
     setPermModalOpen(true);
   };
 
@@ -174,6 +172,15 @@ export default function RolesPage() {
         open={permModalOpen}
         onOk={handleAssignPerms}
         onCancel={() => setPermModalOpen(false)}
+        afterOpenChange={(open) => {
+          // Set values after the form is mounted (destroyOnClose unmounts it),
+          // so the currently-granted permissions are pre-checked.
+          if (open) {
+            permForm.setFieldsValue({
+              permissionIds: assigningRole?.permissions?.map((p) => p.id) ?? [],
+            });
+          }
+        }}
         destroyOnClose
         width={500}
       >
