@@ -8,6 +8,7 @@ import { rolesApi, permissionsApi } from '@/api';
 import type { Role, Permission } from '@/utils/types';
 import { useAuth } from '@/hooks/useAuth';
 import { PERMISSIONS } from '@/utils/permissions';
+import { permLabel, permDescription } from '@/utils/permissionLabels';
 
 const { Text } = Typography;
 
@@ -98,7 +99,9 @@ export default function RolesPage() {
       dataIndex: 'permissions',
       render: (_, record) =>
         record.permissions?.length
-          ? record.permissions.map((p) => <Tag key={p.id}>{p.name}</Tag>)
+          ? record.permissions.map((p) => (
+              <Tag key={p.id}>{permLabel(t, `${p.resource}:${p.action}`)}</Tag>
+            ))
           : <Text type="secondary">{t('rbac.noPermissions')}</Text>,
     },
     { title: t('common.createdAt'), dataIndex: 'createdAt', valueType: 'dateTime', width: 160 },
@@ -177,12 +180,16 @@ export default function RolesPage() {
         <Form form={permForm} layout="vertical">
           <Form.Item name="permissionIds">
             <Checkbox.Group style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {allPerms.map((p) => (
-                <Checkbox key={p.id} value={p.id}>
-                  <Text strong>{p.name}</Text>
-                  {p.description && <Text type="secondary"> — {p.description}</Text>}
-                </Checkbox>
-              ))}
+              {allPerms.map((p) => {
+                const key = `${p.resource}:${p.action}`;
+                const desc = permDescription(t, key);
+                return (
+                  <Checkbox key={p.id} value={p.id}>
+                    <Text strong>{permLabel(t, key)}</Text>
+                    {desc && <Text type="secondary"> — {desc}</Text>}
+                  </Checkbox>
+                );
+              })}
             </Checkbox.Group>
           </Form.Item>
         </Form>
