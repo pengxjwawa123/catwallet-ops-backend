@@ -51,6 +51,10 @@ services:
       PORT: ${PORT:-3000}
       # 容器内固定 production:走 JSON 日志,不依赖 dev-only 的 pino-pretty
       NODE_ENV: production
+      # 初始超管账号 — seed(npm run prisma:seed:prod)首次部署时读取。
+      # 生产下 SEED_ADMIN_PASSWORD 必须显式设置,否则 seed 拒绝运行。
+      SEED_ADMIN_USERNAME: ${SEED_ADMIN_USERNAME:-admin}
+      SEED_ADMIN_PASSWORD: ${SEED_ADMIN_PASSWORD:-}
       CORS_ORIGIN: ${CORS_ORIGIN:-*}
       CATWALLET_API_BASE_URL: ${CATWALLET_API_BASE_URL:-https://api.catwallet.ai}
       CATWALLET_API_TOKEN: ${CATWALLET_API_TOKEN:-}
