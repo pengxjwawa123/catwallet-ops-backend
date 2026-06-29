@@ -6,11 +6,15 @@ import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { rolesApi, permissionsApi } from '@/api';
 import type { Role, Permission } from '@/utils/types';
+import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 const { Text } = Typography;
 
 export default function RolesPage() {
   const { t } = useTranslation();
+  const { superAdmin, hasPermission } = useAuth();
+  const canManage = superAdmin || hasPermission(PERMISSIONS.rbac.manage);
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [permForm] = Form.useForm();
@@ -103,21 +107,23 @@ export default function RolesPage() {
       valueType: 'option',
       width: 240,
       render: (_, record) => [
-        <Button key="edit" type="link" size="small" onClick={() => openEdit(record)}>
-          {t('common.edit')}
-        </Button>,
-        <Button key="perms" type="link" size="small" onClick={() => openAssignPerms(record)}>
-          {t('rbac.assignPermissions')}
-        </Button>,
-        <Popconfirm
-          key="del"
-          title={t('common.confirmDelete')}
-          onConfirm={() => handleDelete(record.id)}
-        >
-          <Button type="link" size="small" danger>
-            {t('common.delete')}
-          </Button>
-        </Popconfirm>,
+        ...(canManage ? [
+          <Button key="edit" type="link" size="small" onClick={() => openEdit(record)}>
+            {t('common.edit')}
+          </Button>,
+          <Button key="perms" type="link" size="small" onClick={() => openAssignPerms(record)}>
+            {t('rbac.assignPermissions')}
+          </Button>,
+          <Popconfirm
+            key="del"
+            title={t('common.confirmDelete')}
+            onConfirm={() => handleDelete(record.id)}
+          >
+            <Button type="link" size="small" danger>
+              {t('common.delete')}
+            </Button>
+          </Popconfirm>,
+        ] : []),
       ],
     },
   ];
@@ -129,11 +135,11 @@ export default function RolesPage() {
         actionRef={actionRef}
         rowKey="id"
         search={false}
-        toolBarRender={() => [
+        toolBarRender={() => canManage ? [
           <Button key="create" type="primary" icon={<PlusOutlined />} onClick={openCreate}>
             {t('rbac.createRole')}
           </Button>,
-        ]}
+        ] : []}
         request={async () => {
           const data = await rolesApi.list();
           const items = Array.isArray(data) ? data : [];

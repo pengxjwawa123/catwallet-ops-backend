@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next';
 import { jobsApi } from '@/api';
 import type { Job } from '@/utils/types';
 import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 
 const { Text, Paragraph } = Typography;
 
@@ -20,7 +21,8 @@ const STATUS_COLOR: Record<string, string> = {
 
 export default function JobsPage() {
   const { t } = useTranslation();
-  const { superAdmin } = useAuth();
+  const { superAdmin, hasPermission } = useAuth();
+  const canManage = superAdmin || hasPermission(PERMISSIONS.job.manage);
   const actionRef = useRef<ActionType>();
   const [form] = Form.useForm();
   const [enqueueOpen, setEnqueueOpen] = useState(false);
@@ -72,7 +74,7 @@ export default function JobsPage() {
         rowKey="id"
         search={false}
         toolBarRender={() =>
-          superAdmin
+          canManage
             ? [
                 <Button key="enqueue" type="primary" icon={<PlusOutlined />} onClick={() => { form.resetFields(); setEnqueueOpen(true); }}>
                   {t('jobs.enqueue')}
@@ -88,7 +90,7 @@ export default function JobsPage() {
         pagination={{ showSizeChanger: true, defaultPageSize: 20 }}
       />
 
-      {superAdmin && (
+      {canManage && (
         <Modal
           title={t('jobs.enqueue')}
           open={enqueueOpen}

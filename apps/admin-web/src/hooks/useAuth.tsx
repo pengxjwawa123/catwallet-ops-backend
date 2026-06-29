@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { storage } from '@/utils/storage';
+import { storage, ACCESS_TOKEN_CHANGED } from '@/utils/storage';
 import { parseJwt } from '@/utils/jwt';
 import { authApi } from '@/api';
 
@@ -75,6 +75,22 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     // Only re-run when the token identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.accessToken]);
+
+  // Re-sync when the token changes outside this provider (notably the http
+  // interceptor's silent refresh, which writes storage directly). Re-deriving
+  // from the new token flips state.accessToken and retriggers loadPermissions,
+  // so a mid-session role/permission change is reflected without a reload.
+  useEffect(() => {
+    const onTokenChanged = () => {
+      const token = storage.getAccess();
+      setState((prev) => {
+        if (token === prev.accessToken) return prev;
+        return stateFromToken(token);
+      });
+    };
+    window.addEventListener(ACCESS_TOKEN_CHANGED, onTokenChanged);
+    return () => window.removeEventListener(ACCESS_TOKEN_CHANGED, onTokenChanged);
+  }, []);
 
   const setTokens = useCallback((access: string, refresh: string) => {
     storage.setAccess(access);
