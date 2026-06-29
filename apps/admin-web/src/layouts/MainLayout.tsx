@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Outlet, useNavigate, useLocation } from 'react-router-dom';
-import { Layout, Menu, Dropdown, Button, Space, Typography, theme } from 'antd';
+import { Layout, Menu, Dropdown, Button, Space, Typography, theme, Spin } from 'antd';
 import {
   DashboardOutlined,
   UserOutlined,
@@ -31,7 +31,7 @@ export default function MainLayout() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const { clearAuth, username, superAdmin, hasPermission } = useAuth();
+  const { clearAuth, username, superAdmin, hasPermission, permissionsLoaded } = useAuth();
   const [collapsed, setCollapsed] = useState(false);
   const [setup2FAOpen, setSetup2FAOpen] = useState(false);
   const { token } = theme.useToken();
@@ -105,7 +105,7 @@ export default function MainLayout() {
       key: '/jobs',
       icon: <ClockCircleOutlined />,
       label: t('nav.jobs'),
-      show: true,
+      show: superAdmin || hasPermission('job:read'),
     },
   ]
     .filter((item) => item.show)
@@ -164,14 +164,20 @@ export default function MainLayout() {
         >
           {collapsed ? 'CW' : 'CatWallet Ops'}
         </div>
-        <Menu
-          mode="inline"
-          selectedKeys={[location.pathname]}
-          defaultOpenKeys={openKeys}
-          style={{ border: 'none', marginTop: 8 }}
-          items={menuItems as typeof menuItems}
-          onClick={({ key }) => navigate(key)}
-        />
+        {superAdmin || permissionsLoaded ? (
+          <Menu
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            defaultOpenKeys={openKeys}
+            style={{ border: 'none', marginTop: 8 }}
+            items={menuItems as typeof menuItems}
+            onClick={({ key }) => navigate(key)}
+          />
+        ) : (
+          <div style={{ display: 'flex', justifyContent: 'center', marginTop: 24 }}>
+            <Spin />
+          </div>
+        )}
       </Sider>
 
       <Layout>

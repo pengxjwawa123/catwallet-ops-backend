@@ -2,7 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { NotFoundException, ConflictException, ForbiddenException } from '@nestjs/common';
 import { RolesService } from './roles.service';
 import { PrismaService } from '../prisma/prisma.service';
-import { PermissionsGuard } from '../auth/guards/permissions.guard';
+import { PermissionResolverService } from '../auth/permission-resolver.service';
 import { RequestUser } from '../auth/strategies/jwt.strategy';
 
 const mockPrisma = {
@@ -22,13 +22,16 @@ const mockPrisma = {
     findMany: jest.fn(),
     upsert: jest.fn(),
     deleteMany: jest.fn(),
+    count: jest.fn(),
   },
   opsUser: { findUnique: jest.fn() },
 };
 
-const mockGuard = {
+const mockResolver = {
   invalidateRoleCache: jest.fn(),
   invalidateUserCache: jest.fn(),
+  getUserRoles: jest.fn(),
+  getUserPermissions: jest.fn(),
 };
 
 const superadminCaller: RequestUser = {
@@ -46,11 +49,14 @@ describe('RolesService', () => {
       providers: [
         RolesService,
         { provide: PrismaService, useValue: mockPrisma },
-        { provide: PermissionsGuard, useValue: mockGuard },
+        { provide: PermissionResolverService, useValue: mockResolver },
       ],
     }).compile();
     service = module.get<RolesService>(RolesService);
     jest.clearAllMocks();
+    // Default: callers are superadmin unless a test overrides. DB-backed.
+    mockResolver.getUserRoles.mockResolvedValue(new Set(['superadmin']));
+    mockResolver.getUserPermissions.mockResolvedValue(new Set());
   });
 
   describe('create', () => {
@@ -87,7 +93,7 @@ describe('RolesService', () => {
       await service.assignPermission('r1', { permissionId: 'p1' }, superadminCaller);
 
       expect(mockPrisma.opsRolePermission.upsert).toHaveBeenCalled();
-      expect(mockGuard.invalidateRoleCache).toHaveBeenCalledWith('r1');
+      expect(mockResolver.invalidateRoleCache).toHaveBeenCalledWith('r1');
     });
 
     it('throws NotFoundException when permission not found', async () => {
@@ -104,6 +110,8 @@ describe('RolesService', () => {
     });
 
     it('throws ForbiddenException when non-superadmin tries to grant rbac:manage', async () => {
+      mockResolver.getUserRoles.mockResolvedValue(new Set(['operator']));
+      mockResolver.getUserPermissions.mockResolvedValue(new Set(['rbac:manage']));
       mockPrisma.opsRole.findUnique.mockResolvedValue({
         id: 'r1',
         name: 'editor',
@@ -151,12 +159,18 @@ describe('RolesService', () => {
       await service.assignRoleToUser('u1', { roleId: 'r1' }, superadminCaller);
 
       expect(mockPrisma.opsUserRole.upsert).toHaveBeenCalled();
-      expect(mockGuard.invalidateUserCache).toHaveBeenCalledWith('u1');
+      expect(mockResolver.invalidateUserCache).toHaveBeenCalledWith('u1');
     });
 
     it('throws ForbiddenException when non-superadmin tries to assign superadmin role', async () => {
+      mockResolver.getUserRoles.mockResolvedValue(new Set(['operator']));
+      mockResolver.getUserPermissions.mockResolvedValue(new Set());
       mockPrisma.opsUser.findUnique.mockResolvedValue({ id: 'u1' });
-      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r-super', name: 'superadmin' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r-super',
+        name: 'superadmin',
+        rolePermissions: [],
+      });
 
       await expect(
         service.assignRoleToUser('u1', { roleId: 'r-super' }, operatorCaller),
@@ -165,12 +179,145 @@ describe('RolesService', () => {
 
     it('allows superadmin to assign superadmin role', async () => {
       mockPrisma.opsUser.findUnique.mockResolvedValue({ id: 'u1' });
-      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r-super', name: 'superadmin' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r-super',
+        name: 'superadmin',
+        rolePermissions: [],
+      });
       mockPrisma.opsUserRole.upsert.mockResolvedValue({});
 
       await expect(
         service.assignRoleToUser('u1', { roleId: 'r-super' }, superadminCaller),
       ).resolves.toEqual({ success: true });
+    });
+
+    it('blocks a non-superadmin from assigning a role carrying a permission they lack (escalation)', async () => {
+      mockResolver.getUserRoles.mockResolvedValue(new Set(['ops-admin']));
+      mockResolver.getUserPermissions.mockResolvedValue(new Set(['ops_user:read']));
+      mockPrisma.opsUser.findUnique.mockResolvedValue({ id: 'u1' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r-powerful',
+        name: 'powerful',
+        rolePermissions: [{ opsPermission: { resource: 'ops_user', action: 'delete' } }],
+      });
+
+      await expect(
+        service.assignRoleToUser('u1', { roleId: 'r-powerful' }, operatorCaller),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('allows a non-superadmin to assign a role whose permissions they all hold', async () => {
+      mockResolver.getUserRoles.mockResolvedValue(new Set(['ops-admin']));
+      mockResolver.getUserPermissions.mockResolvedValue(
+        new Set(['ops_user:read', 'ops_user:update']),
+      );
+      mockPrisma.opsUser.findUnique.mockResolvedValue({ id: 'u1' });
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r-viewer',
+        name: 'viewer',
+        rolePermissions: [{ opsPermission: { resource: 'ops_user', action: 'read' } }],
+      });
+      mockPrisma.opsUserRole.upsert.mockResolvedValue({});
+
+      await expect(
+        service.assignRoleToUser('u1', { roleId: 'r-viewer' }, operatorCaller),
+      ).resolves.toEqual({ success: true });
+    });
+  });
+
+  describe('removeRoleFromUser', () => {
+    it('blocks a non-superadmin from removing the superadmin role', async () => {
+      mockResolver.getUserRoles.mockResolvedValue(new Set(['operator']));
+      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r-super', name: 'superadmin' });
+
+      await expect(
+        service.removeRoleFromUser('u1', 'r-super', operatorCaller),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('blocks removing the last remaining superadmin', async () => {
+      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r-super', name: 'superadmin' });
+      mockPrisma.opsUserRole.count.mockResolvedValue(1);
+
+      await expect(
+        service.removeRoleFromUser('u1', 'r-super', superadminCaller),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('allows superadmin to remove a superadmin when others remain', async () => {
+      mockPrisma.opsRole.findUnique.mockResolvedValue({ id: 'r-super', name: 'superadmin' });
+      mockPrisma.opsUserRole.count.mockResolvedValue(2);
+      mockPrisma.opsUserRole.deleteMany.mockResolvedValue({ count: 1 });
+
+      await expect(
+        service.removeRoleFromUser('u1', 'r-super', superadminCaller),
+      ).resolves.toEqual({ success: true });
+      expect(mockResolver.invalidateUserCache).toHaveBeenCalledWith('u1');
+    });
+  });
+
+  describe('removePermission', () => {
+    it('blocks a non-superadmin from revoking a privileged permission', async () => {
+      mockResolver.getUserRoles.mockResolvedValue(new Set(['operator']));
+      mockResolver.getUserPermissions.mockResolvedValue(new Set(['rbac:manage']));
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
+      mockPrisma.opsPermission.findUnique.mockResolvedValue({
+        id: 'p2',
+        resource: 'rbac',
+        action: 'manage',
+      });
+
+      await expect(
+        service.removePermission('r1', 'p2', operatorCaller),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('allows superadmin to revoke a permission and invalidates cache', async () => {
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
+      mockPrisma.opsPermission.findUnique.mockResolvedValue({
+        id: 'p1',
+        resource: 'audit',
+        action: 'read',
+      });
+      mockPrisma.opsRolePermission.deleteMany.mockResolvedValue({ count: 1 });
+
+      await expect(
+        service.removePermission('r1', 'p1', superadminCaller),
+      ).resolves.toEqual({ success: true });
+      expect(mockResolver.invalidateRoleCache).toHaveBeenCalledWith('r1');
+    });
+  });
+
+  describe('remove', () => {
+    it('deletes the role before invalidating its cache (ordering)', async () => {
+      const calls: string[] = [];
+      mockPrisma.opsRole.findUnique.mockResolvedValue({
+        id: 'r1',
+        name: 'editor',
+        rolePermissions: [],
+        _count: { userRoles: 0 },
+      });
+      mockPrisma.opsRole.delete.mockImplementation(async () => {
+        calls.push('delete');
+        return {};
+      });
+      mockResolver.invalidateRoleCache.mockImplementation(async () => {
+        calls.push('invalidate');
+      });
+
+      await service.remove('r1');
+
+      expect(calls).toEqual(['delete', 'invalidate']);
     });
   });
 });

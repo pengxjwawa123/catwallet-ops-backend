@@ -1,4 +1,4 @@
-import { Controller, Post, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
+import { Controller, Post, Get, Body, Req, HttpCode, HttpStatus } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiResponse } from '@nestjs/swagger';
 import { Request } from 'express';
 import { AuthService } from './auth.service';
@@ -7,12 +7,16 @@ import { Enable2FADto, Verify2FADto } from './dto/two-fa.dto';
 import { Public } from './decorators/public.decorator';
 import { CurrentUser } from './decorators/current-user.decorator';
 import { RequestUser } from './strategies/jwt.strategy';
+import { PermissionResolverService } from './permission-resolver.service';
 import { Throttle } from '@nestjs/throttler';
 
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
-  constructor(private readonly authService: AuthService) {}
+  constructor(
+    private readonly authService: AuthService,
+    private readonly permissionResolver: PermissionResolverService,
+  ) {}
 
   @Public()
   @Throttle({ default: { limit: 5, ttl: 60000 } })
@@ -33,6 +37,19 @@ export class AuthController {
   @ApiOperation({ summary: 'Rotate refresh token' })
   async refresh(@Body() dto: RefreshTokenDto, @Req() req: Request) {
     return this.authService.refresh(dto.refreshToken, req.ip, req.headers['user-agent']);
+  }
+
+  @Get('me')
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current user with effective permissions' })
+  async me(@CurrentUser() user: RequestUser) {
+    const authz = await this.permissionResolver.getUserAuthz(user.userId);
+    return {
+      userId: user.userId,
+      username: user.username,
+      roles: [...authz.roles],
+      permissions: [...authz.permissions],
+    };
   }
 
   @Post('logout')
