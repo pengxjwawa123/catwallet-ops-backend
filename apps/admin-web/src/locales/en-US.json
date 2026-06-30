@@ -21,7 +21,9 @@
     "confirmDelete": "Are you sure to delete this record?",
     "id": "ID",
     "createdAt": "Created At",
-    "updatedAt": "Updated At"
+    "updatedAt": "Updated At",
+    "forbidden": "Sorry, you don't have permission to access this page.",
+    "backHome": "Back to Dashboard"
   },
   "auth": {
     "login": "Sign In",
@@ -90,7 +92,8 @@
     "assignPermissions": "Assign Permissions",
     "createPermission": "Create Permission",
     "permissionName": "Permission Name",
-    "noPermissions": "No permissions"
+    "noPermissions": "No permissions",
+    "permissionLabel": "Label"
   },
   "auditLogs": {
     "title": "Audit Logs",
@@ -153,6 +156,10 @@
     "langNotAddable": "Cannot add {{langs}}: this key has no existing entry for that language, and it can only be added upstream.",
     "import": "Batch Import",
     "importSuccess": "Batch import succeeded",
+    "export": "Export",
+    "exportExcel": "Export Excel",
+    "exportCsv": "Export CSV",
+    "exportEmpty": "No data to export",
     "tab": {
       "translations": "Translations",
       "opLogs": "Operation Logs"
@@ -177,5 +184,93 @@
     "result": "Result",
     "failReason": "Fail Reason",
     "viewDetail": "View Detail"
+  },
+  "permLabels": {
+    "ops_user": {
+      "create": {
+        "label": "Create Ops Users",
+        "desc": "Create ops users"
+      },
+      "read": {
+        "label": "Read Ops Users",
+        "desc": "Read ops users"
+      },
+      "update": {
+        "label": "Update Ops Users",
+        "desc": "Update ops users"
+      },
+      "delete": {
+        "label": "Delete Ops Users",
+        "desc": "Delete ops users"
+      }
+    },
+    "rbac": {
+      "manage": {
+        "label": "Manage RBAC",
+        "desc": "Manage roles and permissions"
+      }
+    },
+    "role": {
+      "assign": {
+        "label": "Assign Roles",
+        "desc": "Assign roles to users"
+      }
+    },
+    "audit": {
+      "read": {
+        "label": "Read Audit Logs",
+        "desc": "Read audit logs"
+      }
+    },
+    "feature_flag": {
+      "read": {
+        "label": "Read Feature Flags",
+        "desc": "Read feature flags"
+      },
+      "manage": {
+        "label": "Manage Feature Flags",
+        "desc": "Create, update, delete feature flags"
+      }
+    },
+    "remote_config": {
+      "read": {
+        "label": "Read Remote Configs",
+        "desc": "Read remote configs"
+      },
+      "manage": {
+        "label": "Manage Remote Configs",
+        "desc": "Create, update, delete remote configs"
+      }
+    },
+    "announcement": {
+      "read": {
+        "label": "Read Announcements",
+        "desc": "Read announcements"
+      },
+      "manage": {
+        "label": "Manage Announcements",
+        "desc": "Create, publish, delete announcements"
+      }
+    },
+    "i18n": {
+      "read": {
+        "label": "Read i18n",
+        "desc": "Read i18n entries"
+      },
+      "manage": {
+        "label": "Manage i18n",
+        "desc": "Add, update, import i18n entries"
+      }
+    },
+    "job": {
+      "read": {
+        "label": "Read Jobs",
+        "desc": "Read jobs"
+      },
+      "manage": {
+        "label": "Manage Jobs",
+        "desc": "Enqueue and manage jobs"
+      }
+    }
   }
 }

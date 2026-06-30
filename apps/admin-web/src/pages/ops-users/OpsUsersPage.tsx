@@ -21,6 +21,7 @@ export default function OpsUsersPage() {
   const [roleModalOpen, setRoleModalOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [roles, setRoles] = useState<Role[]>([]);
+  const [roleEditingUser, setRoleEditingUser] = useState<OpsUser | null>(null);
 
   const canCreate = superAdmin || hasPermission(PERMISSIONS.opsUser.create);
   const canUpdate = superAdmin || hasPermission(PERMISSIONS.opsUser.update);
@@ -55,8 +56,8 @@ export default function OpsUsersPage() {
 
   const openRole = (record: OpsUser) => {
     setEditingId(record.id);
+    setRoleEditingUser(record);
     loadRoles();
-    roleForm.resetFields();
     setRoleModalOpen(true);
   };
 
@@ -245,6 +246,11 @@ export default function OpsUsersPage() {
         open={roleModalOpen}
         onOk={handleRoleSubmit}
         onCancel={() => setRoleModalOpen(false)}
+        afterOpenChange={(open) => {
+          if (open) {
+            roleForm.setFieldsValue({ roleId: roleEditingUser?.roles?.[0]?.id });
+          }
+        }}
         destroyOnClose
       >
         <Form form={roleForm} layout="vertical">

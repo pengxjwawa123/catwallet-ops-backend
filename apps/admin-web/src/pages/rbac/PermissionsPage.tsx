@@ -8,6 +8,7 @@ import { permissionsApi } from '@/api';
 import type { Permission } from '@/utils/types';
 import { useAuth } from '@/hooks/useAuth';
 import { PERMISSIONS } from '@/utils/permissions';
+import { permLabel, permDescription } from '@/utils/permissionLabels';
 
 export default function PermissionsPage() {
   const { t } = useTranslation();
@@ -34,8 +35,22 @@ export default function PermissionsPage() {
   };
 
   const columns: ProColumns<Permission>[] = [
-    { title: t('rbac.permissionName'), dataIndex: 'name', copyable: true },
-    { title: t('rbac.description'), dataIndex: 'description', ellipsis: true },
+    {
+      title: t('rbac.permissionName'),
+      dataIndex: 'name',
+      copyable: true,
+      render: (_, record) => `${record.resource}:${record.action}`,
+    },
+    {
+      title: t('rbac.permissionLabel', '名称'),
+      render: (_, record) => permLabel(t, `${record.resource}:${record.action}`),
+    },
+    {
+      title: t('rbac.description'),
+      dataIndex: 'description',
+      ellipsis: true,
+      render: (_, record) => permDescription(t, `${record.resource}:${record.action}`) || '-',
+    },
     { title: t('common.createdAt'), dataIndex: 'createdAt', valueType: 'dateTime', width: 160 },
     {
       title: t('common.actions'),

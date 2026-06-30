@@ -64,7 +64,9 @@ export interface Role {
 
 export interface Permission {
   id: string;
-  name: string;
+  resource: string;
+  action: string;
+  name?: string;
   description?: string;
   createdAt: string;
 }

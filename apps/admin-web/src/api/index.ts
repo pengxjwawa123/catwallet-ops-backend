@@ -1,4 +1,5 @@
 import http from './http';
+import { normalizeOpsUser, normalizeRole } from './normalize';
 import type {
   LoginResponse,
   MeResponse,
@@ -40,9 +41,12 @@ export const authApi = {
 
 export const opsUsersApi = {
   list: (params: { page?: number; pageSize?: number }) =>
-    http.get<unknown, PagedData<OpsUser>>('/ops-users', { params }),
+    http
+      .get<unknown, PagedData<OpsUser>>('/ops-users', { params })
+      .then((d) => ({ ...d, items: (d.items ?? []).map(normalizeOpsUser) })),
 
-  get: (id: string) => http.get<unknown, OpsUser>(`/ops-users/${id}`),
+  get: (id: string) =>
+    http.get<unknown, OpsUser>(`/ops-users/${id}`).then(normalizeOpsUser),
 
   create: (data: { username: string; email?: string; password: string; roleName?: string }) =>
     http.post<unknown, OpsUser>('/ops-users', data),
@@ -62,9 +66,9 @@ export const opsUsersApi = {
 // ── RBAC ──────────────────────────────────────────────────────────────────────
 
 export const rolesApi = {
-  list: () => http.get<unknown, Role[]>('/rbac/roles'),
+  list: () => http.get<unknown, Role[]>('/rbac/roles').then((rs) => (rs ?? []).map(normalizeRole)),
 
-  get: (id: string) => http.get<unknown, Role>(`/rbac/roles/${id}`),
+  get: (id: string) => http.get<unknown, Role>(`/rbac/roles/${id}`).then(normalizeRole),
 
   create: (data: { name: string; description?: string }) =>
     http.post<unknown, Role>('/rbac/roles', data),

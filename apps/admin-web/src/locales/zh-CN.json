@@ -21,7 +21,9 @@
     "confirmDelete": "确认删除该记录？",
     "id": "ID",
     "createdAt": "创建时间",
-    "updatedAt": "更新时间"
+    "updatedAt": "更新时间",
+    "forbidden": "抱歉，你没有权限访问此页面。",
+    "backHome": "返回仪表盘"
   },
   "auth": {
     "login": "登录",
@@ -90,7 +92,8 @@
     "assignPermissions": "分配权限",
     "createPermission": "新建权限",
     "permissionName": "权限名",
-    "noPermissions": "暂无权限"
+    "noPermissions": "暂无权限",
+    "permissionLabel": "名称"
   },
   "auditLogs": {
     "title": "审计日志",
@@ -153,6 +156,10 @@
     "langNotAddable": "无法添加 {{langs}}：该词条在此语言下不存在，只能在上游新增。",
     "import": "批量导入",
     "importSuccess": "批量导入成功",
+    "export": "导出",
+    "exportExcel": "导出 Excel",
+    "exportCsv": "导出 CSV",
+    "exportEmpty": "暂无可导出的数据",
     "tab": {
       "translations": "翻译列表",
       "opLogs": "操作日志"
@@ -177,5 +184,93 @@
     "result": "结果",
     "failReason": "失败原因",
     "viewDetail": "查看详情"
+  },
+  "permLabels": {
+    "ops_user": {
+      "create": {
+        "label": "创建运营用户",
+        "desc": "创建运营后台用户"
+      },
+      "read": {
+        "label": "查看运营用户",
+        "desc": "查看运营后台用户"
+      },
+      "update": {
+        "label": "更新运营用户",
+        "desc": "修改运营后台用户"
+      },
+      "delete": {
+        "label": "删除运营用户",
+        "desc": "删除运营后台用户"
+      }
+    },
+    "rbac": {
+      "manage": {
+        "label": "管理角色与权限",
+        "desc": "管理角色及权限分配"
+      }
+    },
+    "role": {
+      "assign": {
+        "label": "分配角色",
+        "desc": "为用户分配角色"
+      }
+    },
+    "audit": {
+      "read": {
+        "label": "查看审计日志",
+        "desc": "查看操作审计日志"
+      }
+    },
+    "feature_flag": {
+      "read": {
+        "label": "查看功能开关",
+        "desc": "查看功能开关"
+      },
+      "manage": {
+        "label": "管理功能开关",
+        "desc": "创建、修改、删除功能开关"
+      }
+    },
+    "remote_config": {
+      "read": {
+        "label": "查看远程配置",
+        "desc": "查看远程配置"
+      },
+      "manage": {
+        "label": "管理远程配置",
+        "desc": "创建、修改、删除远程配置"
+      }
+    },
+    "announcement": {
+      "read": {
+        "label": "查看公告",
+        "desc": "查看公告"
+      },
+      "manage": {
+        "label": "管理公告",
+        "desc": "创建、发布、删除公告"
+      }
+    },
+    "i18n": {
+      "read": {
+        "label": "查看多语言",
+        "desc": "查看多语言文案"
+      },
+      "manage": {
+        "label": "管理多语言",
+        "desc": "新增、修改、导入多语言文案"
+      }
+    },
+    "job": {
+      "read": {
+        "label": "查看任务",
+        "desc": "查看任务队列"
+      },
+      "manage": {
+        "label": "管理任务",
+        "desc": "入队及管理任务"
+      }
+    }
   }
 }
