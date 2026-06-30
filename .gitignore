@@ -37,11 +37,9 @@ node_modules/.prisma/
 *.tsbuildinfo
 
 # OMC tooling state
-.omc/
 
 # Compiled output outside dist (e.g. stray tsc runs)
 prisma/*.js
 prisma/*.d.ts
 prisma/*.js.map
 
-CLAUDE.md
