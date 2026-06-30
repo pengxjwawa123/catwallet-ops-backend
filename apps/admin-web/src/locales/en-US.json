@@ -160,6 +160,8 @@
     "exportExcel": "Export Excel",
     "exportCsv": "Export CSV",
     "exportEmpty": "No data to export",
+    "exportSelected": "Export Selected ({{count}})",
+    "exportSelectedCount": "{{count}} selected",
     "loadFailed": "Failed to load translations. Please retry.",
     "tab": {
       "translations": "Translations",

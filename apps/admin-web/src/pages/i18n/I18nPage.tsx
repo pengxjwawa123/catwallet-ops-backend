@@ -1,5 +1,6 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
 import { Button, message, Input, Modal, Form, Upload, Tabs, Typography, Dropdown } from 'antd';
+import type { Key } from 'react';
 import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
@@ -39,6 +40,7 @@ export default function I18nPage() {
   const [submitting, setSubmitting] = useState(false);
   const [importing, setImporting] = useState(false);
   const [logDetail, setLogDetail] = useState<I18nOpLog | null>(null);
+  const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
   const fetchList = async () => {
     setLoading(true);
@@ -212,10 +214,13 @@ export default function I18nPage() {
   };
 
   // Build the export payload. Headers/columns match the agreed template
-  // exactly: Key, 中文 (zh), 英文 (en).
+  // exactly: Key, 中文 (zh), 英文 (en). When keys are checked, only those rows
+  // are exported; otherwise the full (filtered) list is used.
   const buildExportData = (): { headers: string[]; data: ExportRow[] } => {
     const headers = ['Key', '中文', '英文'];
-    const data: ExportRow[] = rows.map((row) => ({
+    const selected = new Set(selectedKeys.map(String));
+    const source = selected.size ? rows.filter((row) => selected.has(row.configKey)) : rows;
+    const data: ExportRow[] = source.map((row) => ({
       Key: row.configKey,
       中文: getCell(row, 'zh')?.value ?? '',
       英文: getCell(row, 'en')?.value ?? '',
@@ -236,7 +241,7 @@ export default function I18nPage() {
       exportToCsv(data, filename, headers);
     }
     i18nApi
-      .createOpLog({ action: 'export', detail: { format, count: data.length } })
+      .createOpLog({ action: 'export', detail: { format, count: data.length, selected: selectedKeys.length > 0 } })
       .catch(() => {});
   };
 
@@ -326,6 +331,20 @@ export default function I18nPage() {
                 loading={loading}
                 search={false}
                 dataSource={rows}
+                rowSelection={{
+                  selectedRowKeys: selectedKeys,
+                  onChange: (keys) => setSelectedKeys(keys),
+                  preserveSelectedRowKeys: true,
+                }}
+                tableAlertRender={({ selectedRowKeys, onCleanSelected }) => (
+                  <span>
+                    {t('i18n.exportSelectedCount', { count: selectedRowKeys.length })}
+                    <Button type="link" size="small" onClick={onCleanSelected}>
+                      {t('common.reset')}
+                    </Button>
+                  </span>
+                )}
+                tableAlertOptionRender={false}
                 scroll={{ x: undefined }}
                 toolBarRender={() => [
                   <Input.Search
@@ -363,7 +382,11 @@ export default function I18nPage() {
                       onClick: ({ key }) => handleExport(key as 'excel' | 'csv'),
                     }}
                   >
-                    <Button icon={<DownloadOutlined />}>{t('i18n.export')}</Button>
+                    <Button icon={<DownloadOutlined />}>
+                      {selectedKeys.length
+                        ? t('i18n.exportSelected', { count: selectedKeys.length })
+                        : t('i18n.export')}
+                    </Button>
                   </Dropdown>,
                   <Button
                     key="create"
