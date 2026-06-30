@@ -160,6 +160,7 @@
     "exportExcel": "Export Excel",
     "exportCsv": "Export CSV",
     "exportEmpty": "No data to export",
+    "loadFailed": "Failed to load translations. Please retry.",
     "tab": {
       "translations": "Translations",
       "opLogs": "Operation Logs"

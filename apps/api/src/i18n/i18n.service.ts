@@ -8,8 +8,19 @@ import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../common/redis/redis.service';
 import { PrismaService } from '../prisma/prisma.service';
 
+// Durable copy of the list — kept for a long time so we always have something
+// to serve even when the slow upstream is unreachable (stale-while-revalidate).
 const LIST_CACHE_KEY = 'i18n:config:list';
-const LIST_CACHE_TTL = 60;
+const LIST_CACHE_TTL = 24 * 60 * 60; // 24h
+// Short-lived freshness marker. While it exists the cached copy is "fresh" and
+// served directly; once it expires the cached copy is served as stale and a
+// background revalidation is kicked off.
+const LIST_FRESH_KEY = 'i18n:config:list:fresh';
+const LIST_FRESH_TTL = 5 * 60; // 5min
+// Upstream returns ~800KB and its latency swings wildly (observed 9–29s), so
+// bound each call and retry once before giving up.
+const UPSTREAM_TIMEOUT_MS = 25_000;
+const UPSTREAM_RETRIES = 1;
 
 /** A single translation record as returned by the CatWallet i18n API. */
 export interface I18nConfigItem {
@@ -61,6 +72,37 @@ export class I18nService {
   }
 
   /**
+   * fetch() bounded by an AbortController timeout, with a small number of
+   * retries. The upstream i18n list is large and slow, so an unbounded fetch
+   * can hang well past any client timeout; this caps each attempt.
+   */
+  private async fetchWithTimeout(
+    url: string,
+    init: RequestInit,
+    timeoutMs = UPSTREAM_TIMEOUT_MS,
+    retries = UPSTREAM_RETRIES,
+  ): Promise<Response> {
+    let lastErr: unknown;
+    for (let attempt = 0; attempt <= retries; attempt++) {
+      const controller = new AbortController();
+      const timer = setTimeout(() => controller.abort(), timeoutMs);
+      try {
+        return await fetch(url, { ...init, signal: controller.signal });
+      } catch (err) {
+        lastErr = err;
+        this.logger.warn(
+          `upstream fetch attempt ${attempt + 1}/${retries + 1} failed for ${url}: ${
+            (err as Error)?.message ?? err
+          }`,
+        );
+      } finally {
+        clearTimeout(timer);
+      }
+    }
+    throw lastErr;
+  }
+
+  /**
    * Parse a CatWallet response, unwrapping the { code, msg, data } envelope.
    * Treats a missing code or code === '200' as success.
    */
@@ -88,23 +130,50 @@ export class I18nService {
     return (json?.data ?? json) as T;
   }
 
-  /** Fetch the full translation list (cached briefly in Redis). */
+  /**
+   * Fetch the full translation list.
+   *
+   * Uses stale-while-revalidate: the list is cached durably (24h). While the
+   * short freshness marker (5min) is present the cached copy is returned
+   * directly. Once it lapses, the cached copy is still returned immediately
+   * (stale) and a background refresh is kicked off — so the slow upstream
+   * (~800KB, 9–29s) never blocks a user request after the first warm-up.
+   */
   async list(): Promise<I18nConfigItem[]> {
     const cached = await this.redis.get(LIST_CACHE_KEY);
-    if (cached) return JSON.parse(cached) as I18nConfigItem[];
 
-    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/list'), {
-      method: 'POST',
-      headers: { Accept: 'application/json', ...this.authHeaders() },
-    });
+    if (cached) {
+      const data = JSON.parse(cached) as I18nConfigItem[];
+      const fresh = await this.redis.get(LIST_FRESH_KEY);
+      if (!fresh) {
+        // Stale: serve now, refresh in the background (errors are swallowed —
+        // the durable copy stays valid until the next successful refresh).
+        void this.refreshList().catch((err) =>
+          this.logger.warn(`background i18n refresh failed: ${(err as Error)?.message ?? err}`),
+        );
+      }
+      return data;
+    }
+
+    // Cold cache: no choice but to wait for the upstream once.
+    return this.refreshList();
+  }
+
+  /** Pull the list from upstream and update both cache keys. */
+  private async refreshList(): Promise<I18nConfigItem[]> {
+    const response = await this.fetchWithTimeout(
+      this.buildUrl('/gt/wallet/api/i18n/config/list'),
+      { method: 'POST', headers: { Accept: 'application/json', ...this.authHeaders() } },
+    );
     const data = (await this.parseEnvelope<I18nConfigItem[]>(response, 'list')) ?? [];
     await this.redis.set(LIST_CACHE_KEY, JSON.stringify(data), LIST_CACHE_TTL);
+    await this.redis.set(LIST_FRESH_KEY, '1', LIST_FRESH_TTL);
     return data;
   }
 
   /** Search translations by keyword (matches key or value). */
   async search(keyword: string): Promise<I18nConfigItem[]> {
-    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/search'), {
+    const response = await this.fetchWithTimeout(this.buildUrl('/gt/wallet/api/i18n/config/search'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -118,7 +187,7 @@ export class I18nService {
 
   /** Add a new key with its zh / en translations. */
   async add(configKey: string, zh: string, en: string) {
-    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/add'), {
+    const response = await this.fetchWithTimeout(this.buildUrl('/gt/wallet/api/i18n/config/add'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -134,7 +203,7 @@ export class I18nService {
 
   /** Update the value of an existing translation entry. */
   async update(configKey: string, id: string, value: string) {
-    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/update'), {
+    const response = await this.fetchWithTimeout(this.buildUrl('/gt/wallet/api/i18n/config/update'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -156,7 +225,7 @@ export class I18nService {
     });
     form.append('file', blob, file.originalname);
 
-    const response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/batch/add'), {
+    const response = await this.fetchWithTimeout(this.buildUrl('/gt/wallet/api/i18n/config/batch/add'), {
       method: 'POST',
       headers: { Accept: 'application/json', ...this.authHeaders() },
       body: form,
@@ -167,7 +236,7 @@ export class I18nService {
   }
 
   private async invalidateCache() {
-    await this.redis.del(LIST_CACHE_KEY);
+    await this.redis.del(LIST_CACHE_KEY, LIST_FRESH_KEY);
   }
 
   // ── Operation logs (local audit trail) ───────────────────────────────────────
