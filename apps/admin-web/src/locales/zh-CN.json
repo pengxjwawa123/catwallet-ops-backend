@@ -160,6 +160,8 @@
     "exportExcel": "导出 Excel",
     "exportCsv": "导出 CSV",
     "exportEmpty": "暂无可导出的数据",
+    "exportSelected": "导出选中 ({{count}})",
+    "exportSelectedCount": "已选择 {{count}} 项",
     "loadFailed": "翻译列表加载失败，请重试。",
     "tab": {
       "translations": "翻译列表",
