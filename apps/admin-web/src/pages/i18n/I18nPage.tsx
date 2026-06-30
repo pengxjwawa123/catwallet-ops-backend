@@ -1,11 +1,12 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { Button, message, Input, Modal, Form, Upload, Tabs, Typography } from 'antd';
-import { PlusOutlined, ReloadOutlined, UploadOutlined } from '@ant-design/icons';
+import { Button, message, Input, Modal, Form, Upload, Tabs, Typography, Dropdown } from 'antd';
+import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
 import { i18nApi } from '@/api';
 import type { I18nConfigItem, I18nOpLog } from '@/utils/types';
+import { exportToExcel, exportToCsv, type ExportRow } from '@/utils/export';
 import dayjs from 'dayjs';
 
 const { Paragraph } = Typography;
@@ -17,8 +18,11 @@ interface I18nCell {
 
 interface I18nRow {
   configKey: string;
+  // latest create / update timestamps across this key's language entries
+  createTime?: string;
+  updateTime?: string;
   // per-language cell keyed by lang code, e.g. zh / en
-  [lang: string]: I18nCell | string;
+  [lang: string]: I18nCell | string | undefined;
 }
 
 export default function I18nPage() {
@@ -93,14 +97,22 @@ export default function I18nPage() {
     const map: Record<string, I18nRow> = {};
     for (const item of items) {
       if (!map[item.configKey]) map[item.configKey] = { configKey: item.configKey };
-      map[item.configKey][item.lang] = { id: item.id, value: item.value };
+      const row = map[item.configKey];
+      row[item.lang] = { id: item.id, value: item.value };
+      // Keep the most recent timestamp across the key's language entries.
+      if (item.createTime && (!row.createTime || item.createTime > row.createTime)) {
+        row.createTime = item.createTime;
+      }
+      if (item.updateTime && (!row.updateTime || item.updateTime > row.updateTime)) {
+        row.updateTime = item.updateTime;
+      }
     }
     return Object.values(map).sort((a, b) => a.configKey.localeCompare(b.configKey));
   }, [items]);
 
   const getCell = (row: I18nRow, lang: string): I18nCell | undefined => {
     const cell = row[lang];
-    return typeof cell === 'object' ? cell : undefined;
+    return cell && typeof cell === 'object' ? cell : undefined;
   };
 
   const openCreate = () => {
@@ -197,6 +209,35 @@ export default function I18nPage() {
     return false;
   };
 
+  // Build the export payload. Headers/columns match the agreed template
+  // exactly: Key, 中文 (zh), 英文 (en).
+  const buildExportData = (): { headers: string[]; data: ExportRow[] } => {
+    const headers = ['Key', '中文', '英文'];
+    const data: ExportRow[] = rows.map((row) => ({
+      Key: row.configKey,
+      中文: getCell(row, 'zh')?.value ?? '',
+      英文: getCell(row, 'en')?.value ?? '',
+    }));
+    return { headers, data };
+  };
+
+  const handleExport = (format: 'excel' | 'csv') => {
+    const { headers, data } = buildExportData();
+    if (!data.length) {
+      message.info(t('i18n.exportEmpty'));
+      return;
+    }
+    const filename = `i18n-${dayjs().format('YYYYMMDD-HHmmss')}`;
+    if (format === 'excel') {
+      exportToExcel(data, filename, headers);
+    } else {
+      exportToCsv(data, filename, headers);
+    }
+    i18nApi
+      .createOpLog({ action: 'export', detail: { format, count: data.length } })
+      .catch(() => {});
+  };
+
   const columns: ProColumns<I18nRow>[] = useMemo(() => {
     const cols: ProColumns<I18nRow>[] = [
       {
@@ -210,6 +251,23 @@ export default function I18nPage() {
         ellipsis: true,
         render: (_: unknown, record: I18nRow) => getCell(record, lang)?.value ?? '-',
       })),
+      {
+        title: t('common.createdAt'),
+        dataIndex: 'createTime',
+        width: 180,
+        sorter: (a: I18nRow, b: I18nRow) => (a.createTime ?? '').localeCompare(b.createTime ?? ''),
+        render: (_: unknown, record: I18nRow) =>
+          record.createTime ? dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') : '-',
+      },
+      {
+        title: t('common.updatedAt'),
+        dataIndex: 'updateTime',
+        width: 180,
+        defaultSortOrder: 'descend' as const,
+        sorter: (a: I18nRow, b: I18nRow) => (a.updateTime ?? '').localeCompare(b.updateTime ?? ''),
+        render: (_: unknown, record: I18nRow) =>
+          record.updateTime ? dayjs(record.updateTime).format('YYYY-MM-DD HH:mm:ss') : '-',
+      },
       {
         title: t('common.actions'),
         valueType: 'option' as const,
@@ -293,6 +351,18 @@ export default function I18nPage() {
                       {t('i18n.import')}
                     </Button>
                   </Upload>,
+                  <Dropdown
+                    key="export"
+                    menu={{
+                      items: [
+                        { key: 'excel', label: t('i18n.exportExcel') },
+                        { key: 'csv', label: t('i18n.exportCsv') },
+                      ],
+                      onClick: ({ key }) => handleExport(key as 'excel' | 'csv'),
+                    }}
+                  >
+                    <Button icon={<DownloadOutlined />}>{t('i18n.export')}</Button>
+                  </Dropdown>,
                   <Button
                     key="create"
                     type="primary"

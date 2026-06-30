@@ -156,6 +156,10 @@
     "langNotAddable": "Cannot add {{langs}}: this key has no existing entry for that language, and it can only be added upstream.",
     "import": "Batch Import",
     "importSuccess": "Batch import succeeded",
+    "export": "Export",
+    "exportExcel": "Export Excel",
+    "exportCsv": "Export CSV",
+    "exportEmpty": "No data to export",
     "tab": {
       "translations": "Translations",
       "opLogs": "Operation Logs"
