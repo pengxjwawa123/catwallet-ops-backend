@@ -48,7 +48,9 @@ export default function I18nPage() {
       const data = await i18nApi.list();
       setItems(data ?? []);
     } catch {
-      /* interceptor shows error */
+      // Surface the failure instead of leaving a silently-empty table. The http
+      // interceptor already toasts the underlying error; this prompts a retry.
+      message.error(t('i18n.loadFailed'));
     } finally {
       setLoading(false);
     }

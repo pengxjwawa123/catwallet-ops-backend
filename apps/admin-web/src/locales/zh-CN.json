@@ -160,6 +160,7 @@
     "exportExcel": "导出 Excel",
     "exportCsv": "导出 CSV",
     "exportEmpty": "暂无可导出的数据",
+    "loadFailed": "翻译列表加载失败，请重试。",
     "tab": {
       "translations": "翻译列表",
       "opLogs": "操作日志"
