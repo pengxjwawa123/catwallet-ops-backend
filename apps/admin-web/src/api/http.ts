@@ -6,7 +6,10 @@ const BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:3001';
 
 export const http = axios.create({
   baseURL: BASE,
-  timeout: 15000,
+  // The i18n list proxies a large, slow upstream (~800KB, can take 20s+ on a
+  // cold cache). Keep the client timeout above the backend's upstream budget so
+  // a one-off slow request doesn't surface as an empty page.
+  timeout: 35000,
 });
 
 let isRefreshing = false;
