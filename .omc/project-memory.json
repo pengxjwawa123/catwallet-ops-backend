@@ -37,7 +37,7 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngh pr create --base main --head feature/i18n-upload-app-frontend \\\n  --title \"feat(admin-web): add app package upload UI to i18n page\" \\\n  --body \"$(cat <<'EOF'\n## Summary\nWires up the admin-web frontend for the `uploadApp` backend endpoint (already on main in 577d446). Previously the permission string and backend route existed but there was no UI to invoke them — a user granted `i18n:upload_app` had no way to use it.\n\n## Changes\n- `i18nApi.uploadApp()` — posts `multipart/form-data` (field `file`) to `POST /i18n/uploadApp`, with a 130s client timeout to match the backend's 120s upstream budget for large APKs (default client timeout is 35s).\n- i18n toolbar gains a permission-gated **Upload App Package** button (`.apk`), shown only when the user holds `i18n:upload_app` (superadmin bypasses). Backend `@RequirePermission` remains the real enforcement.\n- Records an `upload_app` op-log entry on success (filename + size), consistent with batch import.\n- zh/en locale strings for the button and success toast.\n\n## Testing\n- `tsc -p apps/admin-web --noEmit` clean\n- `npm run build` (admin-web) succeeds\n- Locale JSON validated\n\n## Deploy note\nFrontend-only. Requires rebuilding + deploying the admin-web container (`docker compose up -d --build admin-web`). The `i18n:upload_app` permission must also be seeded on the server for the button to appear for non-superadmins.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -10",
+    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngit push origin feature/i18n-upload-app-tab 2>&1 | grep -iE \"branch|github|pull|remote:\" | head -6\ngh pr create --base main --head feature/i18n-upload-app-tab \\\n  --title \"refactor(admin-web): move app upload to its own i18n tab\" \\\n  --body \"$(cat <<'EOF'\n## Summary\nFollow-up to #15. Per feedback, the app-package upload belongs in its own tab in the i18n page, not as a button in the translations toolbar.\n\n## Changes\n- Remove the **Upload App Package** button from the translations toolbar.\n- Add a third tab **Upload App Package** to the i18n page, rendered only when the user holds `i18n:upload_app` (superadmin bypasses). Uses a drag-and-drop `Upload.Dragger` with a `Spin` overlay during upload.\n- Upload behavior unchanged: posts to `POST /i18n/uploadApp`, records an `upload_app` op-log, 130s client timeout.\n- Add `i18n.tab.uploadApp`, `i18n.uploadAppHint`, `i18n.uploadAppUploading` locale strings (zh/en); repurpose `i18n.uploadApp` as the dragger prompt text.\n\n## Testing\n- `tsc -p apps/admin-web --noEmit` clean\n- `npm run build` (admin-web) succeeds\n- Locale JSON validated\n\n## Deploy\nFrontend-only. Rebuild + redeploy admin-web: `docker compose build --no-cache admin-web && docker compose up -d admin-web`, then hard-refresh the browser.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -3",
     "testCommand": "npx jest auth i18n 2>&1 | tail -30",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
@@ -140,15 +140,21 @@
   },
   "hotPaths": [
     {
+      "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
+      "accessCount": 14,
+      "lastAccessed": 1783939048700,
+      "type": "file"
+    },
+    {
       "path": "apps/api/src/i18n/i18n.service.ts",
       "accessCount": 6,
       "lastAccessed": 1783931200226,
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
+      "path": "apps/admin-web/src/locales/en-US.json",
       "accessCount": 6,
-      "lastAccessed": 1783935257763,
+      "lastAccessed": 1783939126363,
       "type": "file"
     },
     {
@@ -158,9 +164,9 @@
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/locales/en-US.json",
-      "accessCount": 4,
-      "lastAccessed": 1783935265646,
+      "path": "apps/admin-web/src/locales/zh-CN.json",
+      "accessCount": 5,
+      "lastAccessed": 1783939149901,
       "type": "file"
     },
     {
@@ -173,12 +179,6 @@
       "path": "apps/admin-web/src/api/index.ts",
       "accessCount": 3,
       "lastAccessed": 1783935162798,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/locales/zh-CN.json",
-      "accessCount": 3,
-      "lastAccessed": 1783935516505,
       "type": "file"
     },
     {
