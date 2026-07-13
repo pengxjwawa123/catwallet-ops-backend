@@ -33,7 +33,9 @@ export const PERMISSIONS = {
   i18n: {
     read: 'i18n:read',
     manage: 'i18n:manage',
-    uploadApp: 'i18n:upload_app',
+  },
+  app: {
+    upload: 'app:upload',
   },
   job: {
     read: 'job:read',
@@ -50,4 +52,5 @@ export type PermissionString =
   | typeof PERMISSIONS.remoteConfig[keyof typeof PERMISSIONS.remoteConfig]
   | typeof PERMISSIONS.announcement[keyof typeof PERMISSIONS.announcement]
   | typeof PERMISSIONS.i18n[keyof typeof PERMISSIONS.i18n]
+  | typeof PERMISSIONS.app[keyof typeof PERMISSIONS.app]
   | typeof PERMISSIONS.job[keyof typeof PERMISSIONS.job];

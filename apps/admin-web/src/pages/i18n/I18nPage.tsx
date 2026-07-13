@@ -5,7 +5,7 @@ import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
-import { i18nApi } from '@/api';
+import { i18nApi, appApi } from '@/api';
 import type { I18nConfigItem, I18nOpLog } from '@/utils/types';
 import { exportToExcel, exportToCsv, type ExportRow } from '@/utils/export';
 import { useAuth } from '@/hooks/useAuth';
@@ -31,7 +31,7 @@ interface I18nRow {
 export default function I18nPage() {
   const { t } = useTranslation();
   const { superAdmin, hasPermission } = useAuth();
-  const canUploadApp = superAdmin || hasPermission(PERMISSIONS.i18n.uploadApp);
+  const canUploadApp = superAdmin || hasPermission(PERMISSIONS.app.upload);
   const actionRef = useRef<ActionType>();
   const logActionRef = useRef<ActionType>();
   const [form] = Form.useForm();
@@ -221,7 +221,7 @@ export default function I18nPage() {
   const handleUploadApp = async (file: File) => {
     setUploadingApp(true);
     try {
-      await i18nApi.uploadApp(file);
+      await appApi.upload(file);
       i18nApi
         .createOpLog({ action: 'upload_app', detail: { fileName: file.name, size: file.size } })
         .catch(() => {});
