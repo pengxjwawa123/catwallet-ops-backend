@@ -16,6 +16,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   TranslationOutlined,
+  CloudUploadOutlined,
 } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
@@ -106,6 +107,12 @@ export default function MainLayout() {
       icon: <ClockCircleOutlined />,
       label: t('nav.jobs'),
       show: superAdmin || hasPermission('job:read'),
+    },
+    {
+      key: '/app-upload',
+      icon: <CloudUploadOutlined />,
+      label: t('nav.appUpload'),
+      show: superAdmin || hasPermission('app:upload'),
     },
   ]
     .filter((item) => item.show)

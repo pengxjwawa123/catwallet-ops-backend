@@ -1,15 +1,13 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { Button, message, Input, Modal, Form, Upload, Tabs, Typography, Dropdown, Spin } from 'antd';
+import { Button, message, Input, Modal, Form, Upload, Tabs, Typography, Dropdown } from 'antd';
 import type { Key } from 'react';
 import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
 import { ProTable } from '@ant-design/pro-components';
 import { useTranslation } from 'react-i18next';
-import { i18nApi, appApi } from '@/api';
+import { i18nApi } from '@/api';
 import type { I18nConfigItem, I18nOpLog } from '@/utils/types';
 import { exportToExcel, exportToCsv, type ExportRow } from '@/utils/export';
-import { useAuth } from '@/hooks/useAuth';
-import { PERMISSIONS } from '@/utils/permissions';
 import dayjs from 'dayjs';
 
 const { Paragraph } = Typography;
@@ -30,8 +28,6 @@ interface I18nRow {
 
 export default function I18nPage() {
   const { t } = useTranslation();
-  const { superAdmin, hasPermission } = useAuth();
-  const canUploadApp = superAdmin || hasPermission(PERMISSIONS.app.upload);
   const actionRef = useRef<ActionType>();
   const logActionRef = useRef<ActionType>();
   const [form] = Form.useForm();
@@ -43,7 +39,6 @@ export default function I18nPage() {
   const [editingRow, setEditingRow] = useState<I18nRow | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [importing, setImporting] = useState(false);
-  const [uploadingApp, setUploadingApp] = useState(false);
   const [logDetail, setLogDetail] = useState<I18nOpLog | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
@@ -214,23 +209,6 @@ export default function I18nPage() {
       /* interceptor shows error */
     } finally {
       setImporting(false);
-    }
-    return false;
-  };
-
-  const handleUploadApp = async (file: File) => {
-    setUploadingApp(true);
-    try {
-      await appApi.upload(file);
-      i18nApi
-        .createOpLog({ action: 'upload_app', detail: { fileName: file.name, size: file.size } })
-        .catch(() => {});
-      message.success(t('i18n.uploadAppSuccess'));
-      logActionRef.current?.reload();
-    } catch {
-      /* interceptor shows error */
-    } finally {
-      setUploadingApp(false);
     }
     return false;
   };
@@ -447,33 +425,6 @@ export default function I18nPage() {
               />
             ),
           },
-          ...(canUploadApp
-            ? [
-                {
-                  key: 'uploadApp',
-                  label: t('i18n.tab.uploadApp'),
-                  children: (
-                    <Spin spinning={uploadingApp} tip={t('i18n.uploadAppUploading')}>
-                      <div style={{ maxWidth: 560, margin: '24px auto' }}>
-                        <Upload.Dragger
-                          accept=".apk"
-                          multiple={false}
-                          showUploadList={false}
-                          disabled={uploadingApp}
-                          beforeUpload={handleUploadApp}
-                        >
-                          <p className="ant-upload-drag-icon">
-                            <UploadOutlined />
-                          </p>
-                          <p className="ant-upload-text">{t('i18n.uploadApp')}</p>
-                          <p className="ant-upload-hint">{t('i18n.uploadAppHint')}</p>
-                        </Upload.Dragger>
-                      </div>
-                    </Spin>
-                  ),
-                },
-              ]
-            : []),
         ]}
       />
 

@@ -17,6 +17,7 @@ const RemoteConfigsPage= lazy(() => import('@/pages/remote-configs/RemoteConfigs
 const AnnouncementsPage= lazy(() => import('@/pages/announcements/AnnouncementsPage'));
 const JobsPage         = lazy(() => import('@/pages/jobs/JobsPage'));
 const I18nPage         = lazy(() => import('@/pages/i18n/I18nPage'));
+const AppUploadPage    = lazy(() => import('@/pages/app-upload/AppUploadPage'));
 
 const Loading = () => (
   <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '60vh' }}>
@@ -108,6 +109,14 @@ export default function AppRouter() {
             element={
               <RequirePermission permission={PERMISSIONS.job.read}>
                 <JobsPage />
+              </RequirePermission>
+            }
+          />
+          <Route
+            path="app-upload"
+            element={
+              <RequirePermission permission={PERMISSIONS.app.upload}>
+                <AppUploadPage />
               </RequirePermission>
             }
           />

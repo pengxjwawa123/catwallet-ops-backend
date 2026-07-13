@@ -55,7 +55,8 @@
     "remoteConfigs": "Remote Configs",
     "announcements": "Announcements",
     "i18n": "I18n Management",
-    "jobs": "Jobs"
+    "jobs": "Jobs",
+    "appUpload": "App Package Upload"
   },
   "dashboard": {
     "title": "Welcome to CatWallet Ops",
@@ -156,10 +157,6 @@
     "langNotAddable": "Cannot add {{langs}}: this key has no existing entry for that language, and it can only be added upstream.",
     "import": "Batch Import",
     "importSuccess": "Batch import succeeded",
-    "uploadApp": "Click or drag an app package here to upload",
-    "uploadAppHint": "Supports a single .apk file. Large packages may take a while to upload.",
-    "uploadAppUploading": "Uploading...",
-    "uploadAppSuccess": "App package uploaded",
     "export": "Export",
     "exportExcel": "Export Excel",
     "exportCsv": "Export CSV",
@@ -169,8 +166,7 @@
     "loadFailed": "Failed to load translations. Please retry.",
     "tab": {
       "translations": "Translations",
-      "opLogs": "Operation Logs",
-      "uploadApp": "Upload App Package"
+      "opLogs": "Operation Logs"
     },
     "log": {
       "title": "Operation Logs",
@@ -181,6 +177,13 @@
       "viewDetail": "View Detail",
       "detailTitle": "Operation Log Detail"
     }
+  },
+  "appUpload": {
+    "title": "App Package Upload",
+    "prompt": "Click or drag an app package here to upload",
+    "hint": "Supports a single .apk file. Large packages may take a while to upload.",
+    "uploading": "Uploading...",
+    "success": "App package uploaded"
   },
   "jobs": {
     "title": "Jobs",
