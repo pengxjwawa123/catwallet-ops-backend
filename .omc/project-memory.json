@@ -37,7 +37,7 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "echo \"=== API typecheck ===\"; npx tsc --noEmit 2>&1 | head -30; echo \"=== admin-web typecheck ===\"; npx tsc -p apps/admin-web/tsconfig.json --noEmit 2>&1 | head -30; echo \"DONE\"",
+    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngh pr create --base main --head feature/i18n-upload-app-frontend \\\n  --title \"feat(admin-web): add app package upload UI to i18n page\" \\\n  --body \"$(cat <<'EOF'\n## Summary\nWires up the admin-web frontend for the `uploadApp` backend endpoint (already on main in 577d446). Previously the permission string and backend route existed but there was no UI to invoke them — a user granted `i18n:upload_app` had no way to use it.\n\n## Changes\n- `i18nApi.uploadApp()` — posts `multipart/form-data` (field `file`) to `POST /i18n/uploadApp`, with a 130s client timeout to match the backend's 120s upstream budget for large APKs (default client timeout is 35s).\n- i18n toolbar gains a permission-gated **Upload App Package** button (`.apk`), shown only when the user holds `i18n:upload_app` (superadmin bypasses). Backend `@RequirePermission` remains the real enforcement.\n- Records an `upload_app` op-log entry on success (filename + size), consistent with batch import.\n- zh/en locale strings for the button and success toast.\n\n## Testing\n- `tsc -p apps/admin-web --noEmit` clean\n- `npm run build` (admin-web) succeeds\n- Locale JSON validated\n\n## Deploy note\nFrontend-only. Requires rebuilding + deploying the admin-web container (`docker compose up -d --build admin-web`). The `i18n:upload_app` permission must also be seeded on the server for the button to appear for non-superadmins.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -10",
     "testCommand": "npx jest auth i18n 2>&1 | tail -30",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
@@ -146,9 +146,21 @@
       "type": "file"
     },
     {
+      "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1783935257763,
+      "type": "file"
+    },
+    {
       "path": "apps/api/src/i18n/i18n.controller.ts",
       "accessCount": 5,
       "lastAccessed": 1783931200174,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/locales/en-US.json",
+      "accessCount": 4,
+      "lastAccessed": 1783935265646,
       "type": "file"
     },
     {
@@ -158,21 +170,27 @@
       "type": "file"
     },
     {
+      "path": "apps/admin-web/src/api/index.ts",
+      "accessCount": 3,
+      "lastAccessed": 1783935162798,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/locales/zh-CN.json",
+      "accessCount": 3,
+      "lastAccessed": 1783935516505,
+      "type": "file"
+    },
+    {
       "path": "apps/admin-web/src/utils/permissions.ts",
       "accessCount": 2,
       "lastAccessed": 1783930420970,
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/locales/zh-CN.json",
+      "path": "apps/admin-web/src/hooks/useAuth.tsx",
       "accessCount": 2,
-      "lastAccessed": 1783930461233,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/locales/en-US.json",
-      "accessCount": 2,
-      "lastAccessed": 1783930540935,
+      "lastAccessed": 1783936565094,
       "type": "file"
     },
     {
@@ -191,6 +209,18 @@
       "path": "apps/api/src/auth/guards/permissions.guard.ts",
       "accessCount": 1,
       "lastAccessed": 1783929872257,
+      "type": "file"
+    },
+    {
+      "path": "docs/DEPLOYMENT.md",
+      "accessCount": 1,
+      "lastAccessed": 1783932341951,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/pages/feature-flags/FeatureFlagsPage.tsx",
+      "accessCount": 1,
+      "lastAccessed": 1783935102605,
       "type": "file"
     }
   ],
