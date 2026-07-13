@@ -37,7 +37,7 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngit push origin feature/i18n-upload-app-tab 2>&1 | grep -iE \"branch|github|pull|remote:\" | head -6\ngh pr create --base main --head feature/i18n-upload-app-tab \\\n  --title \"refactor(admin-web): move app upload to its own i18n tab\" \\\n  --body \"$(cat <<'EOF'\n## Summary\nFollow-up to #15. Per feedback, the app-package upload belongs in its own tab in the i18n page, not as a button in the translations toolbar.\n\n## Changes\n- Remove the **Upload App Package** button from the translations toolbar.\n- Add a third tab **Upload App Package** to the i18n page, rendered only when the user holds `i18n:upload_app` (superadmin bypasses). Uses a drag-and-drop `Upload.Dragger` with a `Spin` overlay during upload.\n- Upload behavior unchanged: posts to `POST /i18n/uploadApp`, records an `upload_app` op-log, 130s client timeout.\n- Add `i18n.tab.uploadApp`, `i18n.uploadAppHint`, `i18n.uploadAppUploading` locale strings (zh/en); repurpose `i18n.uploadApp` as the dragger prompt text.\n\n## Testing\n- `tsc -p apps/admin-web --noEmit` clean\n- `npm run build` (admin-web) succeeds\n- Locale JSON validated\n\n## Deploy\nFrontend-only. Rebuild + redeploy admin-web: `docker compose build --no-cache admin-web && docker compose up -d admin-web`, then hard-refresh the browser.\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -3",
+    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngh pr create --base main --head feature/app-upload-module \\\n  --title \"refactor: move app upload to its own module (app:upload permission)\" \\\n  --body \"$(cat <<'EOF'\n## 背景\n上传更新包的接口和权限之前挂在 i18n 下(`i18n:upload_app`),语义不对 —— 发布 App 更新包和\"国际化\"没有业务关系。本 PR 把它独立出来:独立模块、独立路由、独立权限。\n\n## 后端\n- 新增 `AppPackageModule`:`POST /app/upload`,`@RequirePermission('app:upload')`,自带上游请求管道(500MB 上限、120s 超时、不重试以避免重复发布)。仍转发到 CatWallet 上游 `/gt/wallet/api/i18n/config/uploadApp`(上游地址不变)。\n- 从 `I18nController` / `I18nService` 移除 `uploadApp`。\n- seed:权限 `i18n:upload_app` → `app:upload`(仅 superadmin,operator 不含)。\n\n## 前端\n- `permissions.ts`:移除 `i18n.uploadApp`,新增顶层 `app.upload`。\n- API:`uploadApp` 从 `i18nApi` 移到 `appApi.upload` → `POST /app/upload`。\n- i18n 页的\"上传更新包\"tab 改用 `app:upload` 权限并调用 `appApi.upload`(tab 位置不变)。\n- locales:`permLabels.i18n.upload_app` → `permLabels.app.upload`(中英)。\n\n## 验证\n- 后端 `tsc` / `test`(102 passed)/ `build` 全绿\n- 前端 `tsc` / `build` 全绿\n- locale JSON 校验通过\n- grep 确认无遗留 `i18n:upload_app` / `i18nApi.uploadApp` 引用\n\n## 部署注意\n- 需重建 app + admin-web 镜像。\n- **权限改名**:`app:upload` 是新权限行,需在服务器重跑 seed(`prisma:seed:prod`)才会写入库并挂到 superadmin。旧的 `i18n:upload_app` 若已入库会残留(seed 是 upsert,不会删除),可按需手动清理,但不影响功能。\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -3",
     "testCommand": "npx jest auth i18n 2>&1 | tail -30",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
@@ -141,50 +141,56 @@
   "hotPaths": [
     {
       "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
-      "accessCount": 14,
-      "lastAccessed": 1783939048700,
+      "accessCount": 18,
+      "lastAccessed": 1783949949051,
       "type": "file"
     },
     {
       "path": "apps/api/src/i18n/i18n.service.ts",
-      "accessCount": 6,
-      "lastAccessed": 1783931200226,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/locales/en-US.json",
-      "accessCount": 6,
-      "lastAccessed": 1783939126363,
+      "accessCount": 11,
+      "lastAccessed": 1783949725403,
       "type": "file"
     },
     {
       "path": "apps/api/src/i18n/i18n.controller.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783931200174,
+      "accessCount": 7,
+      "lastAccessed": 1783949674458,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/locales/en-US.json",
+      "accessCount": 7,
+      "lastAccessed": 1783949868370,
       "type": "file"
     },
     {
       "path": "apps/admin-web/src/locales/zh-CN.json",
-      "accessCount": 5,
-      "lastAccessed": 1783939149901,
+      "accessCount": 6,
+      "lastAccessed": 1783949892428,
       "type": "file"
     },
     {
       "path": "prisma/seed.ts",
-      "accessCount": 3,
-      "lastAccessed": 1783930821375,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/api/index.ts",
-      "accessCount": 3,
-      "lastAccessed": 1783935162798,
+      "accessCount": 5,
+      "lastAccessed": 1783949736235,
       "type": "file"
     },
     {
       "path": "apps/admin-web/src/utils/permissions.ts",
-      "accessCount": 2,
-      "lastAccessed": 1783930420970,
+      "accessCount": 5,
+      "lastAccessed": 1783949794674,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/api/index.ts",
+      "accessCount": 5,
+      "lastAccessed": 1783949820812,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/app.module.ts",
+      "accessCount": 3,
+      "lastAccessed": 1783949662534,
       "type": "file"
     },
     {
@@ -221,6 +227,30 @@
       "path": "apps/admin-web/src/pages/feature-flags/FeatureFlagsPage.tsx",
       "accessCount": 1,
       "lastAccessed": 1783935102605,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/i18n/i18n.module.ts",
+      "accessCount": 1,
+      "lastAccessed": 1783941745887,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/app-package/app-package.service.ts",
+      "accessCount": 1,
+      "lastAccessed": 1783949297557,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/app-package/app-package.controller.ts",
+      "accessCount": 1,
+      "lastAccessed": 1783949598150,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/app-package/app-package.module.ts",
+      "accessCount": 1,
+      "lastAccessed": 1783949613566,
       "type": "file"
     }
   ],
