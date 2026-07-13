@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1782787132604,
+  "lastScanned": 1783929661240,
   "projectRoot": "/Users/mac/cat/catwallet-ops-backend",
   "techStack": {
     "languages": [
@@ -37,8 +37,8 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "npm run build",
-    "testCommand": "npm test",
+    "buildCommand": "echo \"=== API typecheck ===\"; npx tsc --noEmit 2>&1 | head -30; echo \"=== admin-web typecheck ===\"; npx tsc -p apps/admin-web/tsconfig.json --noEmit 2>&1 | head -30; echo \"DONE\"",
+    "testCommand": "npx jest auth i18n 2>&1 | tail -30",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
     "scripts": {
@@ -80,14 +80,14 @@
       "path": "apps",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1782787132574,
+      "lastAccessed": 1783929661157,
       "keyFiles": []
     },
     "dist": {
       "path": "dist",
       "purpose": "Distribution/build output",
       "fileCount": 7,
-      "lastAccessed": 1782787132577,
+      "lastAccessed": 1783929661189,
       "keyFiles": [
         "app.module.d.ts",
         "app.module.js",
@@ -100,7 +100,7 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 5,
-      "lastAccessed": 1782787132586,
+      "lastAccessed": 1783929661191,
       "keyFiles": [
         "API.md",
         "ARCHITECTURE.md",
@@ -113,7 +113,7 @@
       "path": "prisma",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1782787132587,
+      "lastAccessed": 1783929661207,
       "keyFiles": [
         "schema.prisma",
         "seed.ts"
@@ -123,14 +123,14 @@
       "path": "apps/api",
       "purpose": "API routes",
       "fileCount": 0,
-      "lastAccessed": 1782787132588,
+      "lastAccessed": 1783929661209,
       "keyFiles": []
     },
     "dist/config": {
       "path": "dist/config",
       "purpose": "Configuration files",
       "fileCount": 3,
-      "lastAccessed": 1782787132588,
+      "lastAccessed": 1783929661211,
       "keyFiles": [
         "env.validation.d.ts",
         "env.validation.js",
@@ -140,303 +140,57 @@
   },
   "hotPaths": [
     {
-      "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
-      "accessCount": 16,
-      "lastAccessed": 1782791598312,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/api/index.ts",
-      "accessCount": 11,
-      "lastAccessed": 1782787162305,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/layouts/MainLayout.tsx",
-      "accessCount": 10,
-      "lastAccessed": 1782702503122,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/auth.controller.ts",
-      "accessCount": 10,
-      "lastAccessed": 1782703464625,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/rbac/roles.controller.ts",
-      "accessCount": 9,
-      "lastAccessed": 1782702150331,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/rbac/roles.service.ts",
-      "accessCount": 9,
-      "lastAccessed": 1782703487687,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/rbac/roles.service.spec.ts",
-      "accessCount": 8,
-      "lastAccessed": 1782703833476,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/hooks/useAuth.tsx",
-      "accessCount": 7,
-      "lastAccessed": 1782702438328,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/guards/permissions.guard.ts",
-      "accessCount": 7,
-      "lastAccessed": 1782703422086,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/rbac/permissions.service.ts",
-      "accessCount": 7,
-      "lastAccessed": 1782703804288,
+      "path": "apps/api/src/i18n/i18n.service.ts",
+      "accessCount": 6,
+      "lastAccessed": 1783931200226,
       "type": "file"
     },
     {
       "path": "apps/api/src/i18n/i18n.controller.ts",
-      "accessCount": 7,
-      "lastAccessed": 1782787178105,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/auth.module.ts",
       "accessCount": 5,
-      "lastAccessed": 1782703441479,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/api/http.ts",
-      "accessCount": 5,
-      "lastAccessed": 1782787171653,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/i18n/i18n.service.ts",
-      "accessCount": 5,
-      "lastAccessed": 1782787178158,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/jobs/jobs.controller.ts",
-      "accessCount": 4,
-      "lastAccessed": 1782700794555,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/guards/permissions.guard.spec.ts",
-      "accessCount": 4,
-      "lastAccessed": 1782703883940,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/utils/types.ts",
-      "accessCount": 4,
-      "lastAccessed": 1782781710702,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/i18n/dto/i18n.dto.ts",
-      "accessCount": 4,
-      "lastAccessed": 1782781770095,
-      "type": "file"
-    },
-    {
-      "path": "docker-compose.yml",
-      "accessCount": 4,
-      "lastAccessed": 1782792114618,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/guards/jwt-auth.guard.ts",
-      "accessCount": 3,
-      "lastAccessed": 1782700739905,
+      "lastAccessed": 1783931200174,
       "type": "file"
     },
     {
       "path": "prisma/seed.ts",
       "accessCount": 3,
-      "lastAccessed": 1782700749324,
+      "lastAccessed": 1783930821375,
       "type": "file"
     },
     {
-      "path": "apps/api/src/app.module.ts",
-      "accessCount": 3,
-      "lastAccessed": 1782700750631,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/strategies/jwt.strategy.ts",
-      "accessCount": 3,
-      "lastAccessed": 1782700752844,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/auth.controller.spec.ts",
-      "accessCount": 3,
-      "lastAccessed": 1782703973864,
-      "type": "file"
-    },
-    {
-      "path": ".env.production.example",
-      "accessCount": 3,
-      "lastAccessed": 1782785469955,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/utils/jwt.ts",
+      "path": "apps/admin-web/src/utils/permissions.ts",
       "accessCount": 2,
-      "lastAccessed": 1782700382841,
+      "lastAccessed": 1783930420970,
       "type": "file"
     },
     {
-      "path": "apps/api/src/auth/auth.service.ts",
+      "path": "apps/admin-web/src/locales/zh-CN.json",
       "accessCount": 2,
-      "lastAccessed": 1782700740478,
+      "lastAccessed": 1783930461233,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/locales/en-US.json",
+      "accessCount": 2,
+      "lastAccessed": 1783930540935,
       "type": "file"
     },
     {
       "path": "apps/api/src/auth/decorators/require-permission.decorator.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782700750687,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/decorators/current-user.decorator.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782700750796,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/rbac/rbac.module.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782700752791,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/router/RequireAuth.tsx",
-      "accessCount": 2,
-      "lastAccessed": 1782700786971,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/two-fa.real.spec.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782701157584,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/common/interceptors/audit.interceptor.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782701175804,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/rbac/permissions.controller.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782701194920,
-      "type": "file"
-    },
-    {
-      "path": ".env.test.example",
-      "accessCount": 2,
-      "lastAccessed": 1782703156899,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/ops-users/ops-users.service.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782716087356,
-      "type": "file"
-    },
-    {
-      "path": "prisma/schema.prisma",
-      "accessCount": 2,
-      "lastAccessed": 1782781684363,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/utils/storage.ts",
-      "accessCount": 2,
-      "lastAccessed": 1782788613534,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/decorators/public.decorator.ts",
       "accessCount": 1,
-      "lastAccessed": 1782700750617,
+      "lastAccessed": 1783929768174,
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/router/index.tsx",
+      "path": "apps/api/src/main.ts",
       "accessCount": 1,
-      "lastAccessed": 1782700760348,
+      "lastAccessed": 1783929861388,
       "type": "file"
     },
     {
-      "path": "apps/api/test/auth.e2e-spec.ts",
+      "path": "apps/api/src/auth/guards/permissions.guard.ts",
       "accessCount": 1,
-      "lastAccessed": 1782700768410,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/api/index.spec.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782700794466,
-      "type": "file"
-    },
-    {
-      "path": "jest.e2e.config.js",
-      "accessCount": 1,
-      "lastAccessed": 1782700795091,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/auth.service.spec.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782700807316,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/config/env.validation.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782700818054,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/ops-users/ops-users.controller.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782700820675,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/common/interceptors/audit.interceptor.spec.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782701167820,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/common/redis/redis.service.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782701853376,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/permission-resolver.service.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782703405446,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/permission-resolver.service.spec.ts",
-      "accessCount": 1,
-      "lastAccessed": 1782703918600,
+      "lastAccessed": 1783929872257,
       "type": "file"
     }
   ],

@@ -20,6 +20,7 @@ const PERMISSIONS: { resource: string; action: string; description: string }[] =
   { resource: 'announcement', action: 'manage', description: 'Manage announcements' },
   { resource: 'i18n', action: 'read', description: 'Read i18n entries' },
   { resource: 'i18n', action: 'manage', description: 'Manage i18n entries' },
+  { resource: 'i18n', action: 'upload_app', description: 'Upload app packages' },
   { resource: 'job', action: 'read', description: 'Read jobs' },
   { resource: 'job', action: 'manage', description: 'Enqueue and manage jobs' },
 ];

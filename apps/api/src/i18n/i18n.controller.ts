@@ -80,6 +80,22 @@ export class I18nController {
     return this.i18nService.batchImport(file);
   }
 
+  @Post('uploadApp')
+  @RequirePermission('i18n:upload_app')
+  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 500 * 1024 * 1024 } }))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  @ApiOperation({ summary: 'Upload an app package (e.g. .apk) to CatWallet' })
+  uploadApp(@UploadedFile() file?: UploadedFileLike) {
+    if (!file) throw new BadRequestException('file is required');
+    return this.i18nService.uploadApp(file);
+  }
+
   @Get('op-logs')
   @RequirePermission('i18n:read')
   @ApiOperation({ summary: 'List i18n operation logs' })

@@ -263,6 +263,10 @@
       "manage": {
         "label": "Manage i18n",
         "desc": "Add, update, import i18n entries"
+      },
+      "upload_app": {
+        "label": "Upload App Package",
+        "desc": "Upload app packages (e.g. .apk)"
       }
     },
     "job": {

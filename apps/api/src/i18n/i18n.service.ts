@@ -21,6 +21,9 @@ const LIST_FRESH_TTL = 5 * 60; // 5min
 // bound each call and retry once before giving up.
 const UPSTREAM_TIMEOUT_MS = 25_000;
 const UPSTREAM_RETRIES = 1;
+// App packages are much larger than the JSON list, so uploads get a longer
+// budget than ordinary upstream calls.
+const UPLOAD_APP_TIMEOUT_MS = 120_000;
 
 /** A single translation record as returned by the CatWallet i18n API. */
 export interface I18nConfigItem {
@@ -233,6 +236,27 @@ export class I18nService {
     const result = await this.parseEnvelope<unknown>(response, 'batch import');
     await this.invalidateCache();
     return result;
+  }
+
+  /**
+   * Forward an uploaded app package (e.g. an .apk) to the CatWallet uploadApp
+   * endpoint. Packages are large, so we allow a generous timeout and disable
+   * retries — a retried multipart upload could publish the same build twice.
+   */
+  async uploadApp(file: { buffer: Buffer; originalname: string; mimetype: string }) {
+    const form = new FormData();
+    const blob = new Blob([new Uint8Array(file.buffer)], {
+      type: file.mimetype || 'application/octet-stream',
+    });
+    form.append('file', blob, file.originalname);
+
+    const response = await this.fetchWithTimeout(
+      this.buildUrl('/gt/wallet/api/i18n/config/uploadApp'),
+      { method: 'POST', headers: { Accept: 'application/json', ...this.authHeaders() }, body: form },
+      UPLOAD_APP_TIMEOUT_MS,
+      0,
+    );
+    return this.parseEnvelope<unknown>(response, 'upload app');
   }
 
   private async invalidateCache() {

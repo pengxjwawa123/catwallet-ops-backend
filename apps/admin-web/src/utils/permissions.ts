@@ -33,6 +33,7 @@ export const PERMISSIONS = {
   i18n: {
     read: 'i18n:read',
     manage: 'i18n:manage',
+    uploadApp: 'i18n:upload_app',
   },
   job: {
     read: 'job:read',
