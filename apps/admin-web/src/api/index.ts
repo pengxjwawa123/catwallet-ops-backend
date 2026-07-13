@@ -195,6 +195,17 @@ export const i18nApi = {
     });
   },
 
+  uploadApp: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    // App packages are large; raise the client timeout to match the backend's
+    // 120s upstream budget so the browser doesn't abort a still-uploading file.
+    return http.post<unknown, unknown>('/i18n/uploadApp', form, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+      timeout: 130000,
+    });
+  },
+
   getOpLogs: (params: { page?: number; pageSize?: number; action?: string; key?: string }) =>
     http.get<unknown, PagedData<I18nOpLog>>('/i18n/op-logs', { params }),
 
