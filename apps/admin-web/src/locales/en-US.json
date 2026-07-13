@@ -156,6 +156,8 @@
     "langNotAddable": "Cannot add {{langs}}: this key has no existing entry for that language, and it can only be added upstream.",
     "import": "Batch Import",
     "importSuccess": "Batch import succeeded",
+    "uploadApp": "Upload App Package",
+    "uploadAppSuccess": "App package uploaded",
     "export": "Export",
     "exportExcel": "Export Excel",
     "exportCsv": "Export CSV",
