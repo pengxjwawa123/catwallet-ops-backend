@@ -8,6 +8,8 @@ import { useTranslation } from 'react-i18next';
 import { i18nApi } from '@/api';
 import type { I18nConfigItem, I18nOpLog } from '@/utils/types';
 import { exportToExcel, exportToCsv, type ExportRow } from '@/utils/export';
+import { useAuth } from '@/hooks/useAuth';
+import { PERMISSIONS } from '@/utils/permissions';
 import dayjs from 'dayjs';
 
 const { Paragraph } = Typography;
@@ -28,6 +30,8 @@ interface I18nRow {
 
 export default function I18nPage() {
   const { t } = useTranslation();
+  const { superAdmin, hasPermission } = useAuth();
+  const canUploadApp = superAdmin || hasPermission(PERMISSIONS.i18n.uploadApp);
   const actionRef = useRef<ActionType>();
   const logActionRef = useRef<ActionType>();
   const [form] = Form.useForm();
@@ -39,6 +43,7 @@ export default function I18nPage() {
   const [editingRow, setEditingRow] = useState<I18nRow | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [uploadingApp, setUploadingApp] = useState(false);
   const [logDetail, setLogDetail] = useState<I18nOpLog | null>(null);
   const [selectedKeys, setSelectedKeys] = useState<Key[]>([]);
 
@@ -213,6 +218,23 @@ export default function I18nPage() {
     return false;
   };
 
+  const handleUploadApp = async (file: File) => {
+    setUploadingApp(true);
+    try {
+      await i18nApi.uploadApp(file);
+      i18nApi
+        .createOpLog({ action: 'upload_app', detail: { fileName: file.name, size: file.size } })
+        .catch(() => {});
+      message.success(t('i18n.uploadAppSuccess'));
+      logActionRef.current?.reload();
+    } catch {
+      /* interceptor shows error */
+    } finally {
+      setUploadingApp(false);
+    }
+    return false;
+  };
+
   // Build the export payload. Headers/columns match the agreed template
   // exactly: Key, 中文 (zh), 英文 (en). When keys are checked, only those rows
   // are exported; otherwise the full (filtered) list is used.
@@ -372,6 +394,18 @@ export default function I18nPage() {
                       {t('i18n.import')}
                     </Button>
                   </Upload>,
+                  canUploadApp ? (
+                    <Upload
+                      key="uploadApp"
+                      accept=".apk"
+                      showUploadList={false}
+                      beforeUpload={handleUploadApp}
+                    >
+                      <Button icon={<UploadOutlined />} loading={uploadingApp}>
+                        {t('i18n.uploadApp')}
+                      </Button>
+                    </Upload>
+                  ) : null,
                   <Dropdown
                     key="export"
                     menu={{

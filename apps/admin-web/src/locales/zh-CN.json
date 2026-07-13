@@ -156,6 +156,8 @@
     "langNotAddable": "无法添加 {{langs}}：该词条在此语言下不存在，只能在上游新增。",
     "import": "批量导入",
     "importSuccess": "批量导入成功",
+    "uploadApp": "上传更新包",
+    "uploadAppSuccess": "更新包上传成功",
     "export": "导出",
     "exportExcel": "导出 Excel",
     "exportCsv": "导出 CSV",
