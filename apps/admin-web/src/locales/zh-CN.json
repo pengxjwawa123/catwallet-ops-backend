@@ -156,7 +156,9 @@
     "langNotAddable": "无法添加 {{langs}}：该词条在此语言下不存在，只能在上游新增。",
     "import": "批量导入",
     "importSuccess": "批量导入成功",
-    "uploadApp": "上传更新包",
+    "uploadApp": "点击或拖拽更新包到此处上传",
+    "uploadAppHint": "支持单个 .apk 文件，大文件上传可能需要一些时间。",
+    "uploadAppUploading": "上传中...",
     "uploadAppSuccess": "更新包上传成功",
     "export": "导出",
     "exportExcel": "导出 Excel",
@@ -167,7 +169,8 @@
     "loadFailed": "翻译列表加载失败，请重试。",
     "tab": {
       "translations": "翻译列表",
-      "opLogs": "操作日志"
+      "opLogs": "操作日志",
+      "uploadApp": "上传更新包"
     },
     "log": {
       "title": "操作日志",

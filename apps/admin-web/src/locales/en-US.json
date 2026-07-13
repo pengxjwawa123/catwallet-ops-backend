@@ -156,7 +156,9 @@
     "langNotAddable": "Cannot add {{langs}}: this key has no existing entry for that language, and it can only be added upstream.",
     "import": "Batch Import",
     "importSuccess": "Batch import succeeded",
-    "uploadApp": "Upload App Package",
+    "uploadApp": "Click or drag an app package here to upload",
+    "uploadAppHint": "Supports a single .apk file. Large packages may take a while to upload.",
+    "uploadAppUploading": "Uploading...",
     "uploadAppSuccess": "App package uploaded",
     "export": "Export",
     "exportExcel": "Export Excel",
@@ -167,7 +169,8 @@
     "loadFailed": "Failed to load translations. Please retry.",
     "tab": {
       "translations": "Translations",
-      "opLogs": "Operation Logs"
+      "opLogs": "Operation Logs",
+      "uploadApp": "Upload App Package"
     },
     "log": {
       "title": "Operation Logs",

@@ -1,5 +1,5 @@
 import { useRef, useState, useEffect, useMemo } from 'react';
-import { Button, message, Input, Modal, Form, Upload, Tabs, Typography, Dropdown } from 'antd';
+import { Button, message, Input, Modal, Form, Upload, Tabs, Typography, Dropdown, Spin } from 'antd';
 import type { Key } from 'react';
 import { PlusOutlined, ReloadOutlined, UploadOutlined, DownloadOutlined } from '@ant-design/icons';
 import type { ActionType, ProColumns } from '@ant-design/pro-components';
@@ -394,18 +394,6 @@ export default function I18nPage() {
                       {t('i18n.import')}
                     </Button>
                   </Upload>,
-                  canUploadApp ? (
-                    <Upload
-                      key="uploadApp"
-                      accept=".apk"
-                      showUploadList={false}
-                      beforeUpload={handleUploadApp}
-                    >
-                      <Button icon={<UploadOutlined />} loading={uploadingApp}>
-                        {t('i18n.uploadApp')}
-                      </Button>
-                    </Upload>
-                  ) : null,
                   <Dropdown
                     key="export"
                     menu={{
@@ -459,6 +447,33 @@ export default function I18nPage() {
               />
             ),
           },
+          ...(canUploadApp
+            ? [
+                {
+                  key: 'uploadApp',
+                  label: t('i18n.tab.uploadApp'),
+                  children: (
+                    <Spin spinning={uploadingApp} tip={t('i18n.uploadAppUploading')}>
+                      <div style={{ maxWidth: 560, margin: '24px auto' }}>
+                        <Upload.Dragger
+                          accept=".apk"
+                          multiple={false}
+                          showUploadList={false}
+                          disabled={uploadingApp}
+                          beforeUpload={handleUploadApp}
+                        >
+                          <p className="ant-upload-drag-icon">
+                            <UploadOutlined />
+                          </p>
+                          <p className="ant-upload-text">{t('i18n.uploadApp')}</p>
+                          <p className="ant-upload-hint">{t('i18n.uploadAppHint')}</p>
+                        </Upload.Dragger>
+                      </div>
+                    </Spin>
+                  ),
+                },
+              ]
+            : []),
         ]}
       />
 
