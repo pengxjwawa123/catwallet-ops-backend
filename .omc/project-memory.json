@@ -37,7 +37,7 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\necho \"=== JSON ===\"; node -e \"JSON.parse(require('fs').readFileSync('apps/admin-web/src/locales/en-US.json','utf8'));JSON.parse(require('fs').readFileSync('apps/admin-web/src/locales/zh-CN.json','utf8'));console.log('OK')\"\necho \"=== fe tsc ===\"; npx tsc -p apps/admin-web/tsconfig.json --noEmit 2>&1 | head -20; echo fe-tsc-done\necho \"=== fe build ===\"; (cd apps/admin-web && npm run build 2>&1 | tail -3)",
+    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\necho \"=== backend tsc ===\"; npx tsc --noEmit 2>&1 | head -12; echo be-tsc-done\necho \"=== frontend tsc ===\"; npx tsc -p apps/admin-web/tsconfig.json --noEmit 2>&1 | head -12; echo fe-tsc-done\necho \"=== backend build ===\"; npm run build 2>&1 | tail -3\necho \"=== frontend build ===\"; (cd apps/admin-web && npm run build 2>&1 | tail -3)",
     "testCommand": "npx jest auth i18n 2>&1 | tail -30",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
@@ -153,8 +153,8 @@
     },
     {
       "path": "apps/admin-web/src/api/index.ts",
-      "accessCount": 9,
-      "lastAccessed": 1783999550512,
+      "accessCount": 10,
+      "lastAccessed": 1784012159056,
       "type": "file"
     },
     {
@@ -176,6 +176,12 @@
       "type": "file"
     },
     {
+      "path": "apps/admin-web/src/pages/app-upload/AppUploadPage.tsx",
+      "accessCount": 6,
+      "lastAccessed": 1784012204914,
+      "type": "file"
+    },
+    {
       "path": "prisma/seed.ts",
       "accessCount": 5,
       "lastAccessed": 1783949736235,
@@ -188,9 +194,9 @@
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/pages/app-upload/AppUploadPage.tsx",
-      "accessCount": 4,
-      "lastAccessed": 1783999562258,
+      "path": "apps/api/src/app-package/app-package.service.ts",
+      "accessCount": 5,
+      "lastAccessed": 1784012128641,
       "type": "file"
     },
     {
@@ -212,21 +218,15 @@
       "type": "file"
     },
     {
-      "path": "apps/api/src/app-package/app-package.service.ts",
+      "path": "apps/api/src/app-package/app-package.controller.ts",
       "accessCount": 3,
-      "lastAccessed": 1783997090405,
+      "lastAccessed": 1784012143987,
       "type": "file"
     },
     {
       "path": "apps/admin-web/src/hooks/useAuth.tsx",
       "accessCount": 2,
       "lastAccessed": 1783936565094,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app-package/app-package.controller.ts",
-      "accessCount": 2,
-      "lastAccessed": 1783997101599,
       "type": "file"
     },
     {
