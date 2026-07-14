@@ -239,6 +239,11 @@ server {
     access_log /var/log/nginx/catwallet-ops-access.log;
     error_log /var/log/nginx/catwallet-ops-error.log;
 
+    # 允许大文件上传(如 App 更新包 .apk)。不设置时 nginx 默认仅 1MB,
+    # 上传较大安装包会被这一层直接以 413 Request Entity Too Large 拒绝。
+    # 需 >= 后端 multer 限制(500MB),这里留余量。
+    client_max_body_size 600m;
+
     # 代理配置
     location / {
         proxy_pass http://app_backend;
@@ -247,10 +252,12 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
 
-        # 超时配置
+        # 超时配置。大文件上传慢,send/read 放到 300s;并关闭请求体缓冲
+        # 以便边收边转发,避免大包先落盘再转发。
+        proxy_request_buffering off;
         proxy_connect_timeout 60s;
-        proxy_send_timeout 60s;
-        proxy_read_timeout 60s;
+        proxy_send_timeout 300s;
+        proxy_read_timeout 300s;
     }
 
     # WebSocket 支持（若需）
