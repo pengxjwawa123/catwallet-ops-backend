@@ -82,8 +82,11 @@ export class AppPackageService {
     const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
     let response: Response;
     try {
+      // All sibling CatWallet config endpoints (list/search/add/update) are
+      // POST with Bearer auth; uploadUrl follows the same convention. Using GET
+      // routes through the gateway's signature-required path and fails (1001).
       response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/uploadUrl'), {
-        method: 'GET',
+        method: 'POST',
         headers: { Accept: 'application/json', ...this.authHeaders() },
         signal: controller.signal,
       });
