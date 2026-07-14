@@ -235,6 +235,10 @@ export const appApi = {
       throw new Error(`S3 upload failed: ${res.status} ${res.statusText}`);
     }
   },
+
+  // Step 3: after a successful upload, ask the upstream to refresh its cache
+  // so the new package is picked up.
+  refreshCache: () => http.get<unknown, unknown>('/app/refresh-cache'),
 };
 
 // ── Jobs ──────────────────────────────────────────────────────────────────────

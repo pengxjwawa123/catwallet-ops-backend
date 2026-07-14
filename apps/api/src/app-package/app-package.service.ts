@@ -98,4 +98,28 @@ export class AppPackageService {
     }
     return this.parseEnvelope<unknown>(response, 'get upload url');
   }
+
+  /**
+   * Ask the CatWallet upstream to refresh its cache after a new app package has
+   * been uploaded. Same gateway convention as uploadUrl: POST + Bearer (a GET
+   * routes through the signature-required path and fails with 1001).
+   */
+  async refreshCache(): Promise<unknown> {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
+    let response: Response;
+    try {
+      response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/uploadCache'), {
+        method: 'POST',
+        headers: { Accept: 'application/json', ...this.authHeaders() },
+        signal: controller.signal,
+      });
+    } catch (err) {
+      this.logger.error(`refresh cache failed: ${(err as Error)?.message ?? err}`);
+      throw new BadGatewayException('CatWallet API refresh cache failed');
+    } finally {
+      clearTimeout(timer);
+    }
+    return this.parseEnvelope<unknown>(response, 'refresh cache');
+  }
 }

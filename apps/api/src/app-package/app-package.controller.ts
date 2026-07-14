@@ -15,4 +15,11 @@ export class AppPackageController {
   getUploadUrl() {
     return this.appPackageService.getUploadUrl();
   }
+
+  @Get('refresh-cache')
+  @RequirePermission('app:upload')
+  @ApiOperation({ summary: 'Refresh the CatWallet cache after an app package upload' })
+  refreshCache() {
+    return this.appPackageService.refreshCache();
+  }
 }

@@ -34,6 +34,15 @@ export default function AppUploadPage() {
       await appApi.uploadToUrl(uploadUrl, file);
       setDone(true);
       message.success(t('appUpload.success'));
+      // Give S3 a moment to make the new object consistent, then refresh the
+      // upstream cache so the package is picked up. Best-effort: a cache-refresh
+      // failure must not mask the successful upload.
+      await new Promise((r) => setTimeout(r, 500));
+      try {
+        await appApi.refreshCache();
+      } catch {
+        // interceptor already toasts the error
+      }
     } catch (err) {
       // The direct-to-S3 PUT uses native fetch, so show its failure explicitly.
       message.error(err instanceof Error ? err.message : t('appUpload.failed'));
