@@ -37,7 +37,7 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngh pr create --base main --head feature/app-upload-sidebar \\\n  --title \"feat(admin-web): app upload as its own sidebar page\" \\\n  --body \"$(cat <<'EOF'\n## 需求\n上传更新包应作为侧边栏的**独立菜单项**(与「国际化管理」并列),而不是塞在国际化管理的 tab 里。\n\n## 改动\n- 新增独立页面 `AppUploadPage`,路由 `/app-upload`,用 `app:upload` 权限守卫。\n- 侧边栏新增菜单项(CloudUploadOutlined 图标),持有 `app:upload` 时显示(superadmin 直通)。\n- 从 `I18nPage` 移除上传 tab、handler、state 及不再使用的 import(`Spin`/`appApi`/`useAuth`/`PERMISSIONS`)。\n- 文案迁移:`i18n.uploadApp*` → 顶层 `appUpload.*`;新增 `nav.appUpload`(中英)。\n\n## 说明\n独立页面不再写 i18n 操作日志(上传 App 与国际化无关);后端全局审计拦截器仍会记录该请求。\n\n## 验证\n- 前端 `tsc` / `build` 全绿\n- locale JSON 校验通过\n- grep 确认 I18nPage 已无上传相关残留引用\n\n## 依赖\n基于 #17(app 模块 + `app:upload` 权限)。部署仍需重跑 seed 写入 `app:upload` 权限。\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -2",
+    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\ngh pr create --base main --head feature/app-upload-presigned-s3 \\\n  --title \"refactor(app-upload): S3 presigned URL direct upload (fixes 413)\" \\\n  --body \"$(cat <<'EOF'\n## 背景\n把 .apk 经我们后端代传会撞 nginx 体积限制(413)。改为**预签名 URL 直传**:浏览器拿到 URL 后直接 PUT 到 S3,文件不再经过我们的 nginx/后端,413 从根上消失。\n\n## 流程\n```\n浏览器 → GET /app/upload-url → 后端转发上游 uploadUrl → 返回预签名URL\n浏览器 → fetch(url, {method:'PUT', body:file}) 直传 S3  → 完成\n```\n\n## 后端\n- `POST /app/upload`(multipart 代传)→ **`GET /app/upload-url`**:转发上游 `gt/wallet/api/i18n/config/uploadUrl`(无参数、GET、沿用与其它 i18n/config 调用一致的 Bearer 鉴权),原样返回其 payload。\n- 移除 multer / FileInterceptor;拿 URL 是个小 JSON GET,超时降到 25s。\n\n## 前端\n- `appApi.getUploadUrl()` 拿预签名 URL;`appApi.upload()` 用**原生 fetch** 直接 PUT 到 S3(不走 axios,以免带上我们的 baseURL/Bearer 破坏预签名)。\n- `extractUrl()` 从上游 payload 里取 URL,不假设字段名(payload 是字符串就直接用;是对象就取第一个 http(s) 值)。\n- 原生 fetch 不经 axios 错误拦截器,`AppUploadPage` 显式弹出 S3 PUT 失败;新增 `appUpload.failed` 文案(中英)。\n\n## 验证\n- 后端 tsc / test(102 passed)/ build 全绿\n- 前端 tsc / build 全绿;locale JSON 校验通过\n\n## 部署注意 ⚠️\n- **浏览器直传要求 S3 桶 CORS 允许我们的前端域名(`test.admin.catwallet.ai`)发 PUT** —— 这需在 CatWallet/桶侧配置。若直传报 CORS 错,就是这里没放开。\n- 直传后大文件不再经过 nginx,#19 的 413 修复对本链路不再必需(但作为其它上传兜底仍建议保留)。\n- 上游返回字段名若与预期不同,`extractUrl` 已做兼容;若返回结构更复杂(如需特定 Content-Type 签名),告诉我实际返回我再精确适配。\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\nEOF\n)\" 2>&1 | tail -2",
     "testCommand": "npx jest auth i18n 2>&1 | tail -30",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
@@ -152,21 +152,27 @@
       "type": "file"
     },
     {
+      "path": "apps/admin-web/src/api/index.ts",
+      "accessCount": 8,
+      "lastAccessed": 1783997183308,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/locales/en-US.json",
+      "accessCount": 8,
+      "lastAccessed": 1783997218564,
+      "type": "file"
+    },
+    {
       "path": "apps/api/src/i18n/i18n.controller.ts",
       "accessCount": 7,
       "lastAccessed": 1783949674458,
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/locales/en-US.json",
-      "accessCount": 7,
-      "lastAccessed": 1783949868370,
-      "type": "file"
-    },
-    {
       "path": "apps/admin-web/src/locales/zh-CN.json",
-      "accessCount": 6,
-      "lastAccessed": 1783949892428,
+      "accessCount": 7,
+      "lastAccessed": 1783997229352,
       "type": "file"
     },
     {
@@ -179,12 +185,6 @@
       "path": "apps/admin-web/src/utils/permissions.ts",
       "accessCount": 5,
       "lastAccessed": 1783949794674,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/api/index.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783949820812,
       "type": "file"
     },
     {
@@ -206,9 +206,27 @@
       "type": "file"
     },
     {
+      "path": "apps/api/src/app-package/app-package.service.ts",
+      "accessCount": 3,
+      "lastAccessed": 1783997090405,
+      "type": "file"
+    },
+    {
       "path": "apps/admin-web/src/hooks/useAuth.tsx",
       "accessCount": 2,
       "lastAccessed": 1783936565094,
+      "type": "file"
+    },
+    {
+      "path": "apps/api/src/app-package/app-package.controller.ts",
+      "accessCount": 2,
+      "lastAccessed": 1783997101599,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/pages/app-upload/AppUploadPage.tsx",
+      "accessCount": 2,
+      "lastAccessed": 1783997208124,
       "type": "file"
     },
     {
@@ -242,18 +260,6 @@
       "type": "file"
     },
     {
-      "path": "apps/api/src/app-package/app-package.service.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783949297557,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app-package/app-package.controller.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783949598150,
-      "type": "file"
-    },
-    {
       "path": "apps/api/src/app-package/app-package.module.ts",
       "accessCount": 1,
       "lastAccessed": 1783949613566,
@@ -263,6 +269,12 @@
       "path": "docker-compose.yml",
       "accessCount": 1,
       "lastAccessed": 1783990499209,
+      "type": "file"
+    },
+    {
+      "path": "apps/admin-web/src/api/http.ts",
+      "accessCount": 1,
+      "lastAccessed": 1783997138467,
       "type": "file"
     }
   ],
