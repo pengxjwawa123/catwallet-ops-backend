@@ -218,17 +218,19 @@ function extractUrl(payload: unknown): string {
 }
 
 export const appApi = {
-  // Ask our backend (which forwards to CatWallet) for a presigned S3 URL.
-  getUploadUrl: () => http.get<unknown, unknown>('/app/upload-url'),
+  // Step 1: ask our backend (which forwards to CatWallet) for a presigned S3
+  // URL and return it as a plain string so the page can display it.
+  getUploadUrl: async (): Promise<string> => {
+    const payload = await http.get<unknown, unknown>('/app/upload-url');
+    return extractUrl(payload);
+  },
 
-  // Upload the file straight to S3 with the presigned URL. Uses the native
-  // fetch (not the axios `http` instance) so our Bearer token / baseURL are
-  // not attached — a presigned URL is self-authenticating and extra headers
-  // can break its signature.
-  upload: async (file: File) => {
-    const payload = await appApi.getUploadUrl();
-    const putUrl = extractUrl(payload);
-    const res = await fetch(putUrl, { method: 'PUT', body: file });
+  // Step 2: upload the file straight to S3 with the presigned URL. Uses the
+  // native fetch (not the axios `http` instance) so our Bearer token / baseURL
+  // are not attached — a presigned URL is self-authenticating and extra
+  // headers can break its signature.
+  uploadToUrl: async (url: string, file: File) => {
+    const res = await fetch(url, { method: 'PUT', body: file });
     if (!res.ok) {
       throw new Error(`S3 upload failed: ${res.status} ${res.statusText}`);
     }

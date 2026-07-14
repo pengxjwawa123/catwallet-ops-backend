@@ -184,7 +184,12 @@
     "hint": "Supports a single .apk file. Large packages may take a while to upload.",
     "uploading": "Uploading...",
     "success": "App package uploaded",
-    "failed": "App package upload failed"
+    "failed": "App package upload failed",
+    "step1": "Get upload link",
+    "step2": "Upload package",
+    "getUrl": "Get upload link",
+    "getUrlAgain": "Get a new link",
+    "urlReady": "Upload link is ready. Now select or drag the package below to upload."
   },
   "jobs": {
     "title": "Jobs",
