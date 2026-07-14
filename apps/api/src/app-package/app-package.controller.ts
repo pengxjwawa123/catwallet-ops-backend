@@ -1,13 +1,6 @@
-import {
-  Controller,
-  Post,
-  UploadedFile,
-  UseInterceptors,
-  BadRequestException,
-} from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiTags, ApiOperation, ApiBearerAuth, ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { AppPackageService, UploadedFileLike } from './app-package.service';
+import { Controller, Get } from '@nestjs/common';
+import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { AppPackageService } from './app-package.service';
 import { RequirePermission } from '../auth/decorators/require-permission.decorator';
 
 @ApiTags('App')
@@ -16,19 +9,10 @@ import { RequirePermission } from '../auth/decorators/require-permission.decorat
 export class AppPackageController {
   constructor(private readonly appPackageService: AppPackageService) {}
 
-  @Post('upload')
+  @Get('upload-url')
   @RequirePermission('app:upload')
-  @UseInterceptors(FileInterceptor('file', { limits: { fileSize: 500 * 1024 * 1024 } }))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: { file: { type: 'string', format: 'binary' } },
-    },
-  })
-  @ApiOperation({ summary: 'Upload an app package (e.g. .apk) to CatWallet' })
-  upload(@UploadedFile() file?: UploadedFileLike) {
-    if (!file) throw new BadRequestException('file is required');
-    return this.appPackageService.upload(file);
+  @ApiOperation({ summary: 'Get a presigned S3 URL for uploading an app package' })
+  getUploadUrl() {
+    return this.appPackageService.getUploadUrl();
   }
 }

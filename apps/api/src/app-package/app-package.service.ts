@@ -6,9 +6,9 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-// App packages are large binaries; give uploads a generous timeout and no
-// retries — a retried multipart upload could publish the same build twice.
-const UPLOAD_APP_TIMEOUT_MS = 120_000;
+// Getting a presigned URL is a small, fast JSON call — unlike the old proxied
+// binary upload it does not need a large timeout.
+const UPSTREAM_TIMEOUT_MS = 25_000;
 
 interface CatWalletEnvelope<T> {
   code?: string;
@@ -16,18 +16,10 @@ interface CatWalletEnvelope<T> {
   data?: T;
 }
 
-/** Minimal shape of a multer-parsed upload (avoids depending on @types/multer). */
-export interface UploadedFileLike {
-  buffer: Buffer;
-  originalname: string;
-  mimetype: string;
-}
-
 /**
- * Handles app-package (e.g. .apk) uploads by forwarding them to the CatWallet
- * upstream. Kept in its own module because publishing an app build is a
- * distinct concern from managing i18n translations, even though the upstream
- * groups the endpoint under its i18n/config path.
+ * Handles app-package (e.g. .apk) publishing. Instead of proxying the binary
+ * through our backend (which hit nginx/body-size limits), we ask the CatWallet
+ * upstream for a presigned S3 URL and let the browser upload directly to S3.
  */
 @Injectable()
 export class AppPackageService {
@@ -77,30 +69,30 @@ export class AppPackageService {
     return (json?.data ?? json) as T;
   }
 
-  /** Forward an uploaded app package to the CatWallet uploadApp endpoint. */
-  async upload(file: UploadedFileLike) {
-    const form = new FormData();
-    const blob = new Blob([new Uint8Array(file.buffer)], {
-      type: file.mimetype || 'application/octet-stream',
-    });
-    form.append('file', blob, file.originalname);
-
+  /**
+   * Fetch a presigned S3 upload URL from the CatWallet upstream. The upstream
+   * endpoint takes no parameters; the browser then PUTs the file straight to
+   * the returned URL, so the binary never passes through our backend.
+   *
+   * The upstream `data` shape is returned to the caller as-is (it carries the
+   * presigned URL). We do not assume a specific field name here.
+   */
+  async getUploadUrl(): Promise<unknown> {
     const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), UPLOAD_APP_TIMEOUT_MS);
+    const timer = setTimeout(() => controller.abort(), UPSTREAM_TIMEOUT_MS);
     let response: Response;
     try {
-      response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/uploadApp'), {
-        method: 'POST',
+      response = await fetch(this.buildUrl('/gt/wallet/api/i18n/config/uploadUrl'), {
+        method: 'GET',
         headers: { Accept: 'application/json', ...this.authHeaders() },
-        body: form,
         signal: controller.signal,
       });
     } catch (err) {
-      this.logger.error(`app upload failed: ${(err as Error)?.message ?? err}`);
-      throw new BadGatewayException('CatWallet API app upload failed');
+      this.logger.error(`get upload url failed: ${(err as Error)?.message ?? err}`);
+      throw new BadGatewayException('CatWallet API get upload url failed');
     } finally {
       clearTimeout(timer);
     }
-    return this.parseEnvelope<unknown>(response, 'app upload');
+    return this.parseEnvelope<unknown>(response, 'get upload url');
   }
 }

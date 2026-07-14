@@ -183,7 +183,8 @@
     "prompt": "Click or drag an app package here to upload",
     "hint": "Supports a single .apk file. Large packages may take a while to upload.",
     "uploading": "Uploading...",
-    "success": "App package uploaded"
+    "success": "App package uploaded",
+    "failed": "App package upload failed"
   },
   "jobs": {
     "title": "Jobs",

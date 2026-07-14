@@ -13,8 +13,10 @@ export default function AppUploadPage() {
     try {
       await appApi.upload(file);
       message.success(t('appUpload.success'));
-    } catch {
-      /* interceptor shows error */
+    } catch (err) {
+      // The get-upload-url step is surfaced by the axios interceptor, but the
+      // direct-to-S3 PUT uses native fetch, so show its failure explicitly.
+      message.error(err instanceof Error ? err.message : t('appUpload.failed'));
     } finally {
       setUploading(false);
     }

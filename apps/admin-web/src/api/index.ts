@@ -204,16 +204,34 @@ export const i18nApi = {
 
 // ── App packages ────────────────────────────────────────────────────────────
 
+// Pull a usable URL out of the upstream's presigned-URL payload without
+// assuming a specific field name: the payload may be the URL string itself,
+// or an object carrying it under some key (uploadUrl / url / ...).
+function extractUrl(payload: unknown): string {
+  if (typeof payload === 'string' && payload.startsWith('http')) return payload;
+  if (payload && typeof payload === 'object') {
+    for (const v of Object.values(payload as Record<string, unknown>)) {
+      if (typeof v === 'string' && v.startsWith('http')) return v;
+    }
+  }
+  throw new Error('No presigned upload URL in response');
+}
+
 export const appApi = {
-  upload: (file: File) => {
-    const form = new FormData();
-    form.append('file', file);
-    // App packages are large; raise the client timeout to match the backend's
-    // 120s upstream budget so the browser doesn't abort a still-uploading file.
-    return http.post<unknown, unknown>('/app/upload', form, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-      timeout: 130000,
-    });
+  // Ask our backend (which forwards to CatWallet) for a presigned S3 URL.
+  getUploadUrl: () => http.get<unknown, unknown>('/app/upload-url'),
+
+  // Upload the file straight to S3 with the presigned URL. Uses the native
+  // fetch (not the axios `http` instance) so our Bearer token / baseURL are
+  // not attached — a presigned URL is self-authenticating and extra headers
+  // can break its signature.
+  upload: async (file: File) => {
+    const payload = await appApi.getUploadUrl();
+    const putUrl = extractUrl(payload);
+    const res = await fetch(putUrl, { method: 'PUT', body: file });
+    if (!res.ok) {
+      throw new Error(`S3 upload failed: ${res.status} ${res.statusText}`);
+    }
   },
 };
 
