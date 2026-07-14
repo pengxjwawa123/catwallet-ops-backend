@@ -194,6 +194,18 @@
       "type": "file"
     },
     {
+      "path": "apps/admin-web/nginx.conf",
+      "accessCount": 3,
+      "lastAccessed": 1783990621828,
+      "type": "file"
+    },
+    {
+      "path": "docs/DEPLOYMENT.md",
+      "accessCount": 3,
+      "lastAccessed": 1783990638127,
+      "type": "file"
+    },
+    {
       "path": "apps/admin-web/src/hooks/useAuth.tsx",
       "accessCount": 2,
       "lastAccessed": 1783936565094,
@@ -215,12 +227,6 @@
       "path": "apps/api/src/auth/guards/permissions.guard.ts",
       "accessCount": 1,
       "lastAccessed": 1783929872257,
-      "type": "file"
-    },
-    {
-      "path": "docs/DEPLOYMENT.md",
-      "accessCount": 1,
-      "lastAccessed": 1783932341951,
       "type": "file"
     },
     {
@@ -251,6 +257,12 @@
       "path": "apps/api/src/app-package/app-package.module.ts",
       "accessCount": 1,
       "lastAccessed": 1783949613566,
+      "type": "file"
+    },
+    {
+      "path": "docker-compose.yml",
+      "accessCount": 1,
+      "lastAccessed": 1783990499209,
       "type": "file"
     }
   ],
