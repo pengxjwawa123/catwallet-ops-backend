@@ -1,0 +1,7 @@
+{
+  "tool_name": "Bash",
+  "tool_input_preview": "{\"command\":\"ls apps/api/tsconfig*.json apps/admin-web/tsconfig*.json 2>&1\",\"description\":\"List tsconfig files in apps\"}",
+  "error": "Exit code 1\n(eval):1: no matches found: apps/api/tsconfig*.json",
+  "timestamp": "2026-07-16T05:42:15.689Z",
+  "retry_count": 1
+}

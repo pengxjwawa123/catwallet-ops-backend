@@ -184,7 +184,7 @@ export const i18nApi = {
   add: (data: { configKey: string; zh: string; en: string }) =>
     http.post<unknown, unknown>('/i18n', data),
 
-  update: (data: { configKey: string; id: string; value: string }) =>
+  update: (data: { configKey: string; id: string; zh?: string; en?: string }) =>
     http.put<unknown, unknown>('/i18n', data),
 
   batchImport: (file: File) => {

@@ -1,6 +1,6 @@
 {
   "version": "1.0.0",
-  "lastScanned": 1783929661240,
+  "lastScanned": 1784173675558,
   "projectRoot": "/Users/mac/cat/catwallet-ops-backend",
   "techStack": {
     "languages": [
@@ -37,8 +37,8 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "cd /Users/mac/cat/catwallet-ops-backend\necho \"=== backend tsc ===\"; npx tsc --noEmit 2>&1 | head -12; echo be-tsc-done\necho \"=== frontend tsc ===\"; npx tsc -p apps/admin-web/tsconfig.json --noEmit 2>&1 | head -12; echo fe-tsc-done\necho \"=== backend build ===\"; npm run build 2>&1 | tail -3\necho \"=== frontend build ===\"; (cd apps/admin-web && npm run build 2>&1 | tail -3)",
-    "testCommand": "npx jest auth i18n 2>&1 | tail -30",
+    "buildCommand": "echo \"=== API (root tsconfig) ===\"; npx tsc --noEmit 2>&1 | head -30; echo \"=== ADMIN-WEB ===\"; cd apps/admin-web && npx tsc --noEmit -p tsconfig.json 2>&1 | head -30",
+    "testCommand": "npm test",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
     "scripts": {
@@ -80,14 +80,14 @@
       "path": "apps",
       "purpose": null,
       "fileCount": 0,
-      "lastAccessed": 1783929661157,
+      "lastAccessed": 1784173675539,
       "keyFiles": []
     },
     "dist": {
       "path": "dist",
       "purpose": "Distribution/build output",
       "fileCount": 7,
-      "lastAccessed": 1783929661189,
+      "lastAccessed": 1784173675541,
       "keyFiles": [
         "app.module.d.ts",
         "app.module.js",
@@ -100,7 +100,7 @@
       "path": "docs",
       "purpose": "Documentation",
       "fileCount": 5,
-      "lastAccessed": 1783929661191,
+      "lastAccessed": 1784173675545,
       "keyFiles": [
         "API.md",
         "ARCHITECTURE.md",
@@ -113,7 +113,7 @@
       "path": "prisma",
       "purpose": null,
       "fileCount": 2,
-      "lastAccessed": 1783929661207,
+      "lastAccessed": 1784173675546,
       "keyFiles": [
         "schema.prisma",
         "seed.ts"
@@ -123,14 +123,14 @@
       "path": "apps/api",
       "purpose": "API routes",
       "fileCount": 0,
-      "lastAccessed": 1783929661209,
+      "lastAccessed": 1784173675547,
       "keyFiles": []
     },
     "dist/config": {
       "path": "dist/config",
       "purpose": "Configuration files",
       "fileCount": 3,
-      "lastAccessed": 1783929661211,
+      "lastAccessed": 1784173675547,
       "keyFiles": [
         "env.validation.d.ts",
         "env.validation.js",
@@ -141,140 +141,32 @@
   "hotPaths": [
     {
       "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
-      "accessCount": 18,
-      "lastAccessed": 1783949949051,
+      "accessCount": 3,
+      "lastAccessed": 1784180521496,
       "type": "file"
     },
     {
       "path": "apps/api/src/i18n/i18n.service.ts",
-      "accessCount": 11,
-      "lastAccessed": 1783949725403,
+      "accessCount": 3,
+      "lastAccessed": 1784181307782,
       "type": "file"
     },
     {
-      "path": "apps/admin-web/src/api/index.ts",
-      "accessCount": 10,
-      "lastAccessed": 1784012159056,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/locales/en-US.json",
-      "accessCount": 9,
-      "lastAccessed": 1783999616849,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/locales/zh-CN.json",
-      "accessCount": 8,
-      "lastAccessed": 1783999629380,
+      "path": "apps/api/src/i18n/dto/i18n.dto.ts",
+      "accessCount": 3,
+      "lastAccessed": 1784181318242,
       "type": "file"
     },
     {
       "path": "apps/api/src/i18n/i18n.controller.ts",
-      "accessCount": 7,
-      "lastAccessed": 1783949674458,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/pages/app-upload/AppUploadPage.tsx",
-      "accessCount": 6,
-      "lastAccessed": 1784012204914,
-      "type": "file"
-    },
-    {
-      "path": "prisma/seed.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783949736235,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/utils/permissions.ts",
-      "accessCount": 5,
-      "lastAccessed": 1783949794674,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app-package/app-package.service.ts",
-      "accessCount": 5,
-      "lastAccessed": 1784012128641,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app.module.ts",
-      "accessCount": 3,
-      "lastAccessed": 1783949662534,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/nginx.conf",
-      "accessCount": 3,
-      "lastAccessed": 1783990621828,
-      "type": "file"
-    },
-    {
-      "path": "docs/DEPLOYMENT.md",
-      "accessCount": 3,
-      "lastAccessed": 1783990638127,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app-package/app-package.controller.ts",
-      "accessCount": 3,
-      "lastAccessed": 1784012143987,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/hooks/useAuth.tsx",
       "accessCount": 2,
-      "lastAccessed": 1783936565094,
+      "lastAccessed": 1784180466262,
       "type": "file"
     },
     {
-      "path": "apps/api/src/auth/decorators/require-permission.decorator.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783929768174,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/main.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783929861388,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/auth/guards/permissions.guard.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783929872257,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/pages/feature-flags/FeatureFlagsPage.tsx",
-      "accessCount": 1,
-      "lastAccessed": 1783935102605,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/i18n/i18n.module.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783941745887,
-      "type": "file"
-    },
-    {
-      "path": "apps/api/src/app-package/app-package.module.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783949613566,
-      "type": "file"
-    },
-    {
-      "path": "docker-compose.yml",
-      "accessCount": 1,
-      "lastAccessed": 1783990499209,
-      "type": "file"
-    },
-    {
-      "path": "apps/admin-web/src/api/http.ts",
-      "accessCount": 1,
-      "lastAccessed": 1783997138467,
+      "path": "apps/admin-web/src/api/index.ts",
+      "accessCount": 2,
+      "lastAccessed": 1784180472019,
       "type": "file"
     }
   ],

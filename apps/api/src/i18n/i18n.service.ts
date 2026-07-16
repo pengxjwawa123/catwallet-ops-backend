@@ -201,8 +201,8 @@ export class I18nService {
     return result;
   }
 
-  /** Update the value of an existing translation entry. */
-  async update(configKey: string, id: string, value: string) {
+  /** Update the zh / en translations of an existing entry by id. */
+  async update(configKey: string, id: string, zh?: string, en?: string) {
     const response = await this.fetchWithTimeout(this.buildUrl('/gt/wallet/api/i18n/config/update'), {
       method: 'POST',
       headers: {
@@ -210,7 +210,7 @@ export class I18nService {
         Accept: 'application/json',
         ...this.authHeaders(),
       },
-      body: JSON.stringify({ configKey, id, value }),
+      body: JSON.stringify({ configKey, id, zh, en }),
     });
     const result = await this.parseEnvelope<unknown>(response, 'update');
     await this.invalidateCache();

@@ -140,35 +140,33 @@ export default function I18nPage() {
     setSubmitting(true);
     try {
       if (editingRow) {
-        // Update each changed language entry individually (API updates by id).
-        const updates: Promise<unknown>[] = [];
+        // Upstream now updates zh + en together by a single id: send only the
+        // languages that changed (omitted ones are left untouched).
+        const zhCell = getCell(editingRow, 'zh');
+        const enCell = getCell(editingRow, 'en');
+        // Any existing entry's id identifies the key group upstream.
+        const id = zhCell?.id ?? enCell?.id;
         const changed: Record<string, string> = {};
-        const skipped: string[] = [];
-        for (const lang of languages) {
-          const cell = getCell(editingRow, lang);
-          const next = values[`lang_${lang}`] ?? '';
-          if (cell) {
-            if (next !== cell.value) {
-              updates.push(
-                i18nApi.update({ configKey: editingRow.configKey, id: String(cell.id), value: next }),
-              );
-              changed[lang] = next;
-            }
-          } else if (next.trim()) {
-            // Upstream update works by entry id; a language with no existing
-            // entry cannot be added through this endpoint.
-            skipped.push(lang.toUpperCase());
-          }
+        const payload: { configKey: string; id: string; zh?: string; en?: string } = {
+          configKey: editingRow.configKey,
+          id: String(id),
+        };
+        const nextZh = values.lang_zh ?? '';
+        const nextEn = values.lang_en ?? '';
+        if (zhCell && nextZh !== zhCell.value) {
+          payload.zh = nextZh;
+          changed.zh = nextZh;
         }
-        if (skipped.length) {
-          message.warning(t('i18n.langNotAddable', { langs: skipped.join(', ') }));
+        if (enCell && nextEn !== enCell.value) {
+          payload.en = nextEn;
+          changed.en = nextEn;
         }
-        if (!updates.length) {
-          if (!skipped.length) message.info(t('i18n.noChanges'));
+        if (id === undefined || (payload.zh === undefined && payload.en === undefined)) {
+          message.info(t('i18n.noChanges'));
           setModalOpen(false);
           return;
         }
-        await Promise.all(updates);
+        await i18nApi.update(payload);
         i18nApi
           .createOpLog({ action: 'update', key: editingRow.configKey, detail: { changed } })
           .catch(() => {});
@@ -312,8 +310,8 @@ export default function I18nPage() {
     },
   ];
 
-  // For create, the add API requires zh + en; for edit, show whatever languages exist.
-  const formLangs = editingRow ? languages : ['zh', 'en'];
+  // Both add and update operate on zh + en only.
+  const formLangs = ['zh', 'en'];
 
   return (
     <>

@@ -61,7 +61,7 @@ export class I18nController {
   @RequirePermission('i18n:manage')
   @ApiOperation({ summary: 'Update a translation entry value' })
   update(@Body() dto: UpdateI18nDto) {
-    return this.i18nService.update(dto.configKey, dto.id, dto.value);
+    return this.i18nService.update(dto.configKey, dto.id, dto.zh, dto.en);
   }
 
   @Post('batch')

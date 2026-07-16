@@ -30,10 +30,17 @@ export class UpdateI18nDto {
   @IsNotEmpty()
   id: string;
 
-  @ApiProperty({ example: 'Cancel', description: 'New translation value' })
+  // zh / en are optional: pass only the language(s) being changed. An omitted
+  // or empty value leaves that language untouched upstream.
+  @ApiPropertyOptional({ example: '取消', description: 'Chinese translation' })
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  value: string;
+  zh?: string;
+
+  @ApiPropertyOptional({ example: 'Cancel', description: 'English translation' })
+  @IsOptional()
+  @IsString()
+  en?: string;
 }
 
 export class SearchI18nDto {
