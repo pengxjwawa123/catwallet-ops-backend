@@ -219,16 +219,28 @@ export class I18nService {
 
   /** Forward an uploaded spreadsheet to the CatWallet batch-import endpoint. */
   async batchImport(file: { buffer: Buffer; originalname: string; mimetype: string }) {
-    const form = new FormData();
-    const blob = new Blob([new Uint8Array(file.buffer)], {
-      type: file.mimetype || 'application/octet-stream',
-    });
-    form.append('file', blob, file.originalname);
+    // Build the multipart body manually with a fixed boundary. Native fetch +
+    // FormData auto-generates a short boundary and its own Content-Type header;
+    // the AWS gateway appears to reject that shape. A fixed, explicit boundary
+    // must be written into BOTH the body bytes and the Content-Type header, so
+    // we cannot rely on FormData here.
+    const boundary = '---MyLongBoundary1234567890';
+    const CRLF = '\r\n';
+    const header =
+      `--${boundary}${CRLF}` +
+      `Content-Disposition: form-data; name="file"; filename="${file.originalname}"${CRLF}` +
+      `Content-Type: ${file.mimetype || 'application/octet-stream'}${CRLF}${CRLF}`;
+    const footer = `${CRLF}--${boundary}--${CRLF}`;
+    const body = Buffer.concat([Buffer.from(header, 'utf-8'), file.buffer, Buffer.from(footer, 'utf-8')]);
 
     const response = await this.fetchWithTimeout(this.buildUrl('/gt/wallet/api/i18n/config/batch/add'), {
       method: 'POST',
-      headers: { Accept: 'application/json', ...this.authHeaders() },
-      body: form,
+      headers: {
+        Accept: 'application/json',
+        'Content-Type': `multipart/form-data; boundary=${boundary}`,
+        ...this.authHeaders(),
+      },
+      body: new Uint8Array(body),
     });
     const result = await this.parseEnvelope<unknown>(response, 'batch import');
     await this.invalidateCache();

@@ -37,7 +37,7 @@
     "runtime": "Node.js 22"
   },
   "build": {
-    "buildCommand": "echo \"=== API (root tsconfig) ===\"; npx tsc --noEmit 2>&1 | head -30; echo \"=== ADMIN-WEB ===\"; cd apps/admin-web && npx tsc --noEmit -p tsconfig.json 2>&1 | head -30",
+    "buildCommand": "npx tsc --noEmit 2>&1 | grep -i \"i18n.service\" | head -20; echo \"---done---\"",
     "testCommand": "npm test",
     "lintCommand": "npm run lint",
     "devCommand": "npm run start",
@@ -140,15 +140,15 @@
   },
   "hotPaths": [
     {
-      "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
-      "accessCount": 3,
-      "lastAccessed": 1784180521496,
+      "path": "apps/api/src/i18n/i18n.service.ts",
+      "accessCount": 5,
+      "lastAccessed": 1784195329208,
       "type": "file"
     },
     {
-      "path": "apps/api/src/i18n/i18n.service.ts",
+      "path": "apps/admin-web/src/pages/i18n/I18nPage.tsx",
       "accessCount": 3,
-      "lastAccessed": 1784181307782,
+      "lastAccessed": 1784180521496,
       "type": "file"
     },
     {
