@@ -41,11 +41,18 @@ ENV NODE_ENV=production
 # OpenSSL needed for Prisma engine at runtime (db push / migrate deploy / queries)
 RUN apk add --no-cache openssl libc6-compat
 
-# Install only production dependencies (no dev tooling)
+# Reuse the already-installed & compiled node_modules from the build stage
+# instead of running `npm ci` again. This avoids recompiling native modules
+# (argon2) at this stage, which lacks the build toolchain (python3/make/g++).
 COPY package*.json ./
 COPY prisma ./prisma/
+COPY --from=build /app/node_modules ./node_modules
 
-RUN npm ci --omit=dev && npx prisma generate
+# The Prisma client was already generated in the build stage and copied over
+# with node_modules above. Regenerate BEFORE pruning (the `prisma` CLI is a
+# devDependency, so it must still be present), then drop dev-only deps. Neither
+# step recompiles native modules, so no build toolchain is needed here.
+RUN npx prisma generate && npm prune --omit=dev
 
 # Copy compiled output from the build stage
 COPY --from=build /app/dist ./dist

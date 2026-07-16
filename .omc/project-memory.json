@@ -158,6 +158,12 @@
       "type": "file"
     },
     {
+      "path": "Dockerfile",
+      "accessCount": 3,
+      "lastAccessed": 1784195744198,
+      "type": "file"
+    },
+    {
       "path": "apps/api/src/i18n/i18n.controller.ts",
       "accessCount": 2,
       "lastAccessed": 1784180466262,
