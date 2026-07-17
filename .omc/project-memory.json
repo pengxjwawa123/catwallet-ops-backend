@@ -141,8 +141,8 @@
   "hotPaths": [
     {
       "path": "apps/api/src/i18n/i18n.service.ts",
-      "accessCount": 5,
-      "lastAccessed": 1784195329208,
+      "accessCount": 7,
+      "lastAccessed": 1784251651844,
       "type": "file"
     },
     {
@@ -165,8 +165,8 @@
     },
     {
       "path": "apps/api/src/i18n/i18n.controller.ts",
-      "accessCount": 2,
-      "lastAccessed": 1784180466262,
+      "accessCount": 3,
+      "lastAccessed": 1784200156934,
       "type": "file"
     },
     {
